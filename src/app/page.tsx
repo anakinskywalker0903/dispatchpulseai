@@ -18,7 +18,7 @@ import { validateSchedule } from '@/lib/constraintEngine';
 import { solveScheduleDeterministically } from '@/lib/heuristicSolver';
 import { computeScheduleDiff } from '@/lib/diffEngine';
 
-import { Sidebar } from '@/components/Sidebar';
+import { Sidebar, NavTab } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
 import { ApprovalBanner } from '@/components/ApprovalBanner';
 import { TimelineGrid } from '@/components/TimelineGrid';
@@ -30,6 +30,10 @@ import { AuditLogDrawer } from '@/components/AuditLogDrawer';
 import { NotificationsDrawer } from '@/components/NotificationsDrawer';
 import { RequestDetailModal } from '@/components/RequestDetailModal';
 import { ApiKeyModal } from '@/components/ApiKeyModal';
+import { DispatchChatbot } from '@/components/chat/DispatchChatbot';
+import { WorkOrdersTable } from '@/components/admin/WorkOrdersTable';
+import { TechniciansRoster } from '@/components/admin/TechniciansRoster';
+import { AITelemetry } from '@/components/admin/AITelemetry';
 
 export default function DispatchDashboard() {
   // Primary Domain State
@@ -63,6 +67,7 @@ export default function DispatchDashboard() {
   const [isManualModalOpen, setIsManualModalOpen] = useState<boolean>(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'SPLIT' | 'TIMELINE_FULL'>('TIMELINE_FULL');
+  const [currentTab, setCurrentTab] = useState<NavTab>('TIMELINE');
 
   // Load custom key from localStorage if present
   useEffect(() => {
@@ -512,16 +517,72 @@ export default function DispatchDashboard() {
     setIsManualModalOpen(true);
   };
 
+  // CRUD Handlers for Work Orders & Technicians
+  const handleCreateRequest = (newReq: ServiceRequest) => {
+    setRequests((prev) => [newReq, ...prev]);
+    setUnassignedIds((prev) => [newReq.id, ...prev]);
+    addAuditEntry(
+      'MANUAL_OVERRIDE',
+      'DISPATCHER',
+      `New work order created: ${newReq.id} (${newReq.title}) for ${newReq.customer}`
+    );
+  };
+
+  const handleDeleteRequest = (reqId: string) => {
+    setRequests((prev) => prev.filter((r) => r.id !== reqId));
+    setAssignments((prev) => prev.filter((a) => a.requestId !== reqId));
+    setUnassignedIds((prev) => prev.filter((id) => id !== reqId));
+    addAuditEntry(
+      'MANUAL_OVERRIDE',
+      'DISPATCHER',
+      `Work order ${reqId} deleted from dispatch system`
+    );
+  };
+
+  const handleToggleTechStatus = (techId: string) => {
+    setTechnicians((prev) =>
+      prev.map((t) => {
+        if (t.id === techId) {
+          const nextStatus = t.status === 'Active' ? 'Unavailable' : 'Active';
+          return {
+            ...t,
+            status: nextStatus,
+            disruptionReason: nextStatus === 'Unavailable' ? 'Dispatcher set to unavailable' : undefined,
+          };
+        }
+        return t;
+      })
+    );
+    const tech = technicians.find((t) => t.id === techId);
+    addAuditEntry(
+      'MANUAL_OVERRIDE',
+      'DISPATCHER',
+      `Technician ${tech?.name || techId} status updated`
+    );
+  };
+
+  const handleAddTechnician = (newTech: Technician) => {
+    setTechnicians((prev) => [...prev, newTech]);
+    addAuditEntry(
+      'MANUAL_OVERRIDE',
+      'DISPATCHER',
+      `New technician onboarded: ${newTech.name} (${newTech.skills.join(', ')}) in ${newTech.assignedRegion}`
+    );
+  };
+
   const validation = validateSchedule(assignments, technicians, requests);
 
   return (
     <div className="flex min-h-screen bg-[#F1F1F1] text-[#2E2E2E] antialiased">
       {/* ── STYLIST AI PERSISTENT ORANGE SIDEBAR ── */}
       <Sidebar
+        currentTab={currentTab}
+        onSelectTab={setCurrentTab}
         currentVersion={currentVersion}
         versionCount={versions.length}
         auditCount={auditLogs.length}
         notificationCount={notifications.length}
+        unassignedCount={unassignedIds.length}
         isPlanning={isPlanning}
         onTriggerAIPlanning={() => handleRunAIPlanning()}
         onSimulateEmergency={handleSimulateEmergency}
@@ -580,66 +641,121 @@ export default function DispatchDashboard() {
           </div>
         )}
 
-        {/* Layout Mode Selector & Workspace */}
-        <div className="flex items-center justify-between pb-1">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setViewMode('TIMELINE_FULL')}
-              className={`text-xs font-black uppercase px-3 py-1.5 rounded-md border-2 border-[#222222] transition-all cursor-pointer ${
-                viewMode === 'TIMELINE_FULL'
-                  ? 'bg-[#222222] text-white shadow-[2px_2px_0_0_#222222]'
-                  : 'bg-white text-stone-700 hover:bg-stone-100'
-              }`}
-            >
-              📅 Expansive Timeline View
-            </button>
-            <button
-              onClick={() => setViewMode('SPLIT')}
-              className={`text-xs font-black uppercase px-3 py-1.5 rounded-md border-2 border-[#222222] transition-all cursor-pointer ${
-                viewMode === 'SPLIT'
-                  ? 'bg-[#222222] text-white shadow-[2px_2px_0_0_#222222]'
-                  : 'bg-white text-stone-700 hover:bg-stone-100'
-              }`}
-            >
-              🗂️ Split View (Board + Queue)
-            </button>
-          </div>
+        {/* ── CONDITIONAL VIEWPORT BASED ON CURRENT TAB ── */}
+        {currentTab === 'TIMELINE' && (
+          <>
+            {/* Layout Mode Selector & Workspace */}
+            <div className="flex items-center justify-between pb-1">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setViewMode('TIMELINE_FULL')}
+                  className={`text-xs font-black uppercase px-3 py-1.5 rounded-md border-2 border-[#222222] transition-all cursor-pointer ${
+                    viewMode === 'TIMELINE_FULL'
+                      ? 'bg-[#222222] text-white shadow-[2px_2px_0_0_#222222]'
+                      : 'bg-white text-stone-700 hover:bg-stone-100'
+                  }`}
+                >
+                  📅 Expansive Timeline View
+                </button>
+                <button
+                  onClick={() => setViewMode('SPLIT')}
+                  className={`text-xs font-black uppercase px-3 py-1.5 rounded-md border-2 border-[#222222] transition-all cursor-pointer ${
+                    viewMode === 'SPLIT'
+                      ? 'bg-[#222222] text-white shadow-[2px_2px_0_0_#222222]'
+                      : 'bg-white text-stone-700 hover:bg-stone-100'
+                  }`}
+                >
+                  🗂️ Split View (Board + Queue)
+                </button>
+              </div>
 
-          {viewMode === 'TIMELINE_FULL' && unassignedIds.length > 0 && (
-            <button
-              onClick={() => setViewMode('SPLIT')}
-              className="text-xs font-black uppercase px-3 py-1.5 bg-[#fef08a] text-[#222222] border-2 border-[#222222] shadow-[2px_2px_0_0_#222222] rounded-md animate-bounce cursor-pointer"
-            >
-              ⚠️ {unassignedIds.length} Unassigned Tickets Waiting &rarr;
-            </button>
-          )}
-        </div>
+              {viewMode === 'TIMELINE_FULL' && unassignedIds.length > 0 && (
+                <button
+                  onClick={() => setViewMode('SPLIT')}
+                  className="text-xs font-black uppercase px-3 py-1.5 bg-[#fef08a] text-[#222222] border-2 border-[#222222] shadow-[2px_2px_0_0_#222222] rounded-md animate-bounce cursor-pointer"
+                >
+                  ⚠️ {unassignedIds.length} Unassigned Tickets Waiting &rarr;
+                </button>
+              )}
+            </div>
 
-        {/* Dynamic Layout Grid */}
-        <div className={`grid grid-cols-1 ${viewMode === 'SPLIT' ? 'xl:grid-cols-12' : 'grid-cols-1'} gap-5 flex-1 items-start`}>
-          {/* Gantt Timeline Board */}
-          <div className={`${viewMode === 'SPLIT' ? 'xl:col-span-8' : 'w-full'} flex flex-col h-full min-h-[580px]`}>
-            <TimelineGrid
+            {/* Dynamic Layout Grid */}
+            <div className={`grid grid-cols-1 ${viewMode === 'SPLIT' ? 'xl:grid-cols-12' : 'grid-cols-1'} gap-5 flex-1 items-start`}>
+              {/* Gantt Timeline Board */}
+              <div className={`${viewMode === 'SPLIT' ? 'xl:col-span-8' : 'w-full'} flex flex-col h-full min-h-[580px]`}>
+                <TimelineGrid
+                  technicians={technicians}
+                  requests={requests}
+                  assignments={assignments}
+                  onSelectAssignment={handleSelectAssignment}
+                  selectedAssignmentId={selectedAssignment?.id}
+                />
+              </div>
+
+              {/* Unassigned Queue */}
+              {viewMode === 'SPLIT' && (
+                <div className="xl:col-span-4 flex flex-col h-full min-h-[580px]">
+                  <ServiceRequestQueue
+                    requests={requests}
+                    unassignedIds={unassignedIds}
+                    onSelectRequest={handleSelectQueueRequest}
+                    onOpenManualAssign={handleOpenManualAssign}
+                  />
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ── COPILOT CHATBOT TAB ── */}
+        {currentTab === 'CHATBOT' && (
+          <div className="flex-1 flex flex-col">
+            <DispatchChatbot
               technicians={technicians}
               requests={requests}
               assignments={assignments}
-              onSelectAssignment={handleSelectAssignment}
-              selectedAssignmentId={selectedAssignment?.id}
+              groqApiKey={groqApiKey}
+              onSimulateEmergency={handleSimulateEmergency}
+              onSimulateDisruption={handleSimulateTechDisruption}
+              onTriggerAIPlanning={() => handleRunAIPlanning()}
             />
           </div>
+        )}
 
-          {/* Unassigned Queue */}
-          {viewMode === 'SPLIT' && (
-            <div className="xl:col-span-4 flex flex-col h-full min-h-[580px]">
-              <ServiceRequestQueue
-                requests={requests}
-                unassignedIds={unassignedIds}
-                onSelectRequest={handleSelectQueueRequest}
-                onOpenManualAssign={handleOpenManualAssign}
-              />
-            </div>
-          )}
-        </div>
+        {/* ── WORK ORDERS CRUD TAB ── */}
+        {currentTab === 'REQUESTS' && (
+          <div className="flex-1 flex flex-col">
+            <WorkOrdersTable
+              requests={requests}
+              assignments={assignments}
+              onCreateRequest={handleCreateRequest}
+              onDeleteRequest={handleDeleteRequest}
+              onAssignRequest={handleOpenManualAssign}
+            />
+          </div>
+        )}
+
+        {/* ── TECHNICIANS ROSTER TAB ── */}
+        {currentTab === 'TECHNICIANS' && (
+          <div className="flex-1 flex flex-col">
+            <TechniciansRoster
+              technicians={technicians}
+              onToggleStatus={handleToggleTechStatus}
+              onAddTechnician={handleAddTechnician}
+            />
+          </div>
+        )}
+
+        {/* ── AI TELEMETRY TAB ── */}
+        {currentTab === 'TELEMETRY' && (
+          <div className="flex-1 flex flex-col">
+            <AITelemetry
+              versions={versions}
+              auditLogs={auditLogs}
+              groqApiKey={groqApiKey}
+            />
+          </div>
+        )}
       </div>
 
       {/* ── MODALS & DRAWERS ── */}

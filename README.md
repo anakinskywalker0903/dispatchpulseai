@@ -30,7 +30,17 @@ DispatchPulse AI is an enterprise-grade, human-in-the-loop field service schedul
    - **Emergency Ticket Injection:** Injects urgent, critical tasks (e.g., Hospital ICU Generator Transfer Switch failure) and recalculates the daily schedule.
    - **"What Changed & Why" Diff Viewer:** Side-by-side comparison between versions showing rescheduled, reassigned, and newly allocated tasks with AI rationales.
 
-5. **Schedule Snapshot Versioning & Immutable Audit Trail**
+5. **Conversational AI Dispatch Copilot (Interactive Chatbot)**
+   - Dispatchers can query the schedule using natural language (e.g., *"Who has bandwidth for an emergency in Downtown?"*, *"Why couldn't Sarah take the industrial generator ticket?"*).
+   - Chatbot provides actionable interactive suggestions: one-click triggers to inject emergencies or simulate disruptions straight from the conversation stream.
+   - Powered by Groq LLaMA 3.3 70B with contextual schedule awareness.
+
+6. **Full Operational Admin Panel**
+   - **Work Orders Management:** Searchable and filterable ticket directory with custom work order creation (`+ New Service Request`), real-time status indicators, and deletion controls.
+   - **Technicians Roster Management:** Roster control to onboard new technicians, edit skill qualifications and working hours, and toggle Active/Unavailable status.
+   - **AI Telemetry & Solver Scorecard:** Live metrics dashboard tracking solver inference latency (~320ms on Groq LPU), hard constraint satisfaction rate (100%), and a real-time event stream.
+
+7. **Schedule Snapshot Versioning & Immutable Audit Trail**
    - Retains full snapshot history (`v1: Initial AI Draft`, `v2: Dispatcher Approved`, `v3: Replanned after Disruption`).
    - One-click restore to any previous version.
    - Chronological audit log tracking every proposal, approval, override reason, and system event.

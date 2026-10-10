@@ -13,14 +13,23 @@ import {
   RotateCcw,
   Wrench,
   Radio,
+  MessageSquare,
+  ClipboardList,
+  Users,
+  Activity,
 } from 'lucide-react';
 import { ScheduleVersion } from '@/lib/types';
 
+export type NavTab = 'TIMELINE' | 'CHATBOT' | 'REQUESTS' | 'TECHNICIANS' | 'TELEMETRY';
+
 interface SidebarProps {
+  currentTab: NavTab;
+  onSelectTab: (tab: NavTab) => void;
   currentVersion: ScheduleVersion | null;
   versionCount: number;
   auditCount: number;
   notificationCount: number;
+  unassignedCount: number;
   isPlanning: boolean;
   onTriggerAIPlanning: () => void;
   onSimulateEmergency: () => void;
@@ -33,10 +42,13 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
+  currentTab,
+  onSelectTab,
   currentVersion,
   versionCount,
   auditCount,
   notificationCount,
+  unassignedCount,
   isPlanning,
   onTriggerAIPlanning,
   onSimulateEmergency,
@@ -76,19 +88,93 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <span>{isPlanning ? 'Agent Solving...' : 'Run Dispatch AI'}</span>
         </button>
 
-        {/* Navigation / Actions List */}
+        {/* Navigation / Tabs List */}
         <nav className="space-y-1.5 pt-1">
           <div className="text-[10px] font-black uppercase tracking-wider text-[#222222]/70 px-2 pb-1">
-            Command Center
+            Command Modules
           </div>
 
           <button
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md font-black uppercase text-xs text-[#222222] bg-white border-2 border-[#222222] shadow-[2px_2px_0_0_#222222] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] cursor-pointer"
+            onClick={() => onSelectTab('TIMELINE')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-md font-black uppercase text-xs border-2 border-[#222222] transition-all cursor-pointer ${
+              currentTab === 'TIMELINE'
+                ? 'bg-[#222222] text-white shadow-[2px_2px_0_0_#222222]'
+                : 'bg-white text-[#222222] shadow-[2px_2px_0_0_#222222] hover:translate-x-[-1px] hover:translate-y-[-1px]'
+            }`}
           >
-            <Calendar className="h-4 w-4" />
-            <span>Today's Timeline</span>
+            <div className="flex items-center gap-2.5">
+              <Calendar className="h-4 w-4" />
+              <span>Gantt Timeline</span>
+            </div>
           </button>
+
+          <button
+            onClick={() => onSelectTab('CHATBOT')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-md font-black uppercase text-xs border-2 border-[#222222] transition-all cursor-pointer ${
+              currentTab === 'CHATBOT'
+                ? 'bg-[#222222] text-white shadow-[2px_2px_0_0_#222222]'
+                : 'bg-white text-[#222222] shadow-[2px_2px_0_0_#222222] hover:translate-x-[-1px] hover:translate-y-[-1px]'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <MessageSquare className="h-4 w-4 text-[#FF6F20]" />
+              <span>AI Copilot Chat</span>
+            </div>
+            <span className="text-[9px] bg-[#fef08a] text-[#222222] font-black px-1.5 py-0.2 rounded border border-[#222222]">
+              Live
+            </span>
+          </button>
+
+          <button
+            onClick={() => onSelectTab('REQUESTS')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-md font-black uppercase text-xs border-2 border-[#222222] transition-all cursor-pointer ${
+              currentTab === 'REQUESTS'
+                ? 'bg-[#222222] text-white shadow-[2px_2px_0_0_#222222]'
+                : 'bg-white text-[#222222] shadow-[2px_2px_0_0_#222222] hover:translate-x-[-1px] hover:translate-y-[-1px]'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <ClipboardList className="h-4 w-4" />
+              <span>Work Orders (CRUD)</span>
+            </div>
+            {unassignedCount > 0 && (
+              <span className="text-[9px] bg-[#ffdad6] text-red-900 font-bold px-1.5 py-0.2 rounded border border-red-700">
+                {unassignedCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => onSelectTab('TECHNICIANS')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-md font-black uppercase text-xs border-2 border-[#222222] transition-all cursor-pointer ${
+              currentTab === 'TECHNICIANS'
+                ? 'bg-[#222222] text-white shadow-[2px_2px_0_0_#222222]'
+                : 'bg-white text-[#222222] shadow-[2px_2px_0_0_#222222] hover:translate-x-[-1px] hover:translate-y-[-1px]'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <Users className="h-4 w-4" />
+              <span>Staff Roster</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => onSelectTab('TELEMETRY')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-md font-black uppercase text-xs border-2 border-[#222222] transition-all cursor-pointer ${
+              currentTab === 'TELEMETRY'
+                ? 'bg-[#222222] text-white shadow-[2px_2px_0_0_#222222]'
+                : 'bg-white text-[#222222] shadow-[2px_2px_0_0_#222222] hover:translate-x-[-1px] hover:translate-y-[-1px]'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <Activity className="h-4 w-4" />
+              <span>AI Telemetry</span>
+            </div>
+          </button>
+
+          <div className="text-[10px] font-black uppercase tracking-wider text-[#222222]/70 px-2 pt-2.5 pb-1">
+            Disruptions Simulator
+          </div>
 
           <button
             onClick={onSimulateEmergency}
@@ -117,32 +203,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
 
           <div className="text-[10px] font-black uppercase tracking-wider text-[#222222]/70 px-2 pt-2.5 pb-1">
-            Auditing & Telemetry
+            Audit & Settings
           </div>
 
           <button
             onClick={onOpenVersions}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-md font-black uppercase text-xs text-[#222222] bg-white border-2 border-[#222222] shadow-[2px_2px_0_0_#222222] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 rounded-md font-black uppercase text-xs text-[#222222] bg-white border-2 border-[#222222] shadow-[2px_2px_0_0_#222222] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <History className="h-4 w-4" />
-              <span>Version History</span>
+              <History className="h-3.5 w-3.5" />
+              <span>Versions</span>
             </div>
-            <span className="bg-[#c8e6ff] text-[#222222] border border-[#222222] font-mono font-bold text-[10px] py-0 px-1.5 rounded">
+            <span className="bg-[#c8e6ff] text-[#222222] border border-[#222222] font-mono font-bold text-[9px] py-0 px-1 rounded">
               v{currentVersion?.versionNumber || 1}
             </span>
           </button>
 
           <button
             onClick={onOpenAuditLogs}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-md font-black uppercase text-xs text-[#222222] bg-white border-2 border-[#222222] shadow-[2px_2px_0_0_#222222] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 rounded-md font-black uppercase text-xs text-[#222222] bg-white border-2 border-[#222222] shadow-[2px_2px_0_0_#222222] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
+              <FileText className="h-3.5 w-3.5" />
               <span>Audit Trail</span>
             </div>
             {auditCount > 0 && (
-              <span className="bg-[#fde047] text-[#222222] border border-[#222222] font-mono font-bold text-[10px] py-0 px-1.5 rounded">
+              <span className="bg-[#fde047] text-[#222222] border border-[#222222] font-mono font-bold text-[9px] py-0 px-1 rounded">
                 {auditCount}
               </span>
             )}
@@ -150,14 +236,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           <button
             onClick={onOpenNotifications}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-md font-black uppercase text-xs text-[#222222] bg-white border-2 border-[#222222] shadow-[2px_2px_0_0_#222222] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 rounded-md font-black uppercase text-xs text-[#222222] bg-white border-2 border-[#222222] shadow-[2px_2px_0_0_#222222] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <Bell className="h-4 w-4" />
+              <Bell className="h-3.5 w-3.5" />
               <span>Notifications</span>
             </div>
             {notificationCount > 0 && (
-              <span className="bg-[#86efac] text-[#14532d] border border-[#222222] font-mono font-bold text-[10px] py-0 px-1.5 rounded">
+              <span className="bg-[#86efac] text-[#14532d] border border-[#222222] font-mono font-bold text-[9px] py-0 px-1 rounded">
                 {notificationCount}
               </span>
             )}
@@ -165,29 +251,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           <button
             onClick={onOpenApiKeyModal}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-md font-black uppercase text-xs text-[#222222] bg-white border-2 border-[#222222] shadow-[2px_2px_0_0_#222222] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 rounded-md font-black uppercase text-xs text-[#222222] bg-white border-2 border-[#222222] shadow-[2px_2px_0_0_#222222] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <Key className="h-4 w-4 text-[#FF6F20]" />
-              <span>API Key / Engine</span>
+              <Key className="h-3.5 w-3.5 text-[#FF6F20]" />
+              <span>API Key</span>
             </div>
-            <span className="text-[10px] font-bold text-stone-500">Groq</span>
+            <span className="text-[9px] font-bold text-stone-500">Groq</span>
           </button>
         </nav>
       </div>
 
       {/* Bottom Footer Section */}
-      <div className="space-y-3 pt-4 border-t-2 border-[#222222] pb-2">
+      <div className="space-y-2 pt-3 border-t-2 border-[#222222] pb-1">
         <button
           onClick={onReset}
           className="w-full bg-white text-[#222222] border-2 border-[#222222] shadow-[2px_2px_0_0_#222222] rounded-md py-1.5 px-2 text-[11px] font-black uppercase flex items-center justify-center gap-1.5 hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all cursor-pointer"
         >
           <RotateCcw className="h-3.5 w-3.5" />
-          <span>Reset Day Shift</span>
+          <span>Reset Shift</span>
         </button>
 
         {/* Live Engine Status Card */}
-        <div className="bg-[#222222] text-white p-2.5 rounded-md border-2 border-[#222222] shadow-[2px_2px_0_0_#000] text-center space-y-1">
+        <div className="bg-[#222222] text-white p-2 rounded-md border-2 border-[#222222] shadow-[2px_2px_0_0_#000] text-center space-y-0.5">
           <div className="flex items-center justify-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-[#86efac]">
             <Radio className="h-3 w-3 animate-pulse" />
             <span>AI System Online</span>

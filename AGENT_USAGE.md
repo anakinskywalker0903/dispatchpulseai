@@ -111,3 +111,11 @@ Respond with ONLY a valid raw JSON object conforming to the AIPlanningResponse s
 - **Automated Vitest Test Suite:** 11 unit tests verifying skill matching, working hour bounds, break protection, double-booking prevention, maximum workload limits, completed task immutability, and diff computations.
 - **Mathematical Safety Net:** A pure TypeScript constraint engine (`validateSchedule`) inspects all proposed assignments, ensuring zero hallucinations make it to the active dispatch board.
 - **Human-in-the-Loop Review:** Dispatchers inspect all proposed changes via the visual diff viewer and approval banner before committing any change.
+
+---
+
+## 6. Conversational AI Copilot (`/api/chat`)
+
+- **Interactive System Prompt:** Configured as an advisory dispatch assistant that ingests the live technicians roster, pending work orders, and existing timetable.
+- **Action Suggestion Extraction:** Parses user queries and proactively suggests next steps (e.g., prompting the user to simulate an emergency ticket or trigger dynamic replanning).
+- **Graceful Fallback:** If Groq API rate limits are encountered, an offline rule-based knowledge engine answers common dispatch questions directly.
