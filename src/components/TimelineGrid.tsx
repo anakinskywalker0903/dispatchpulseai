@@ -14,6 +14,9 @@ import {
   Sparkles,
   UserX,
   CheckCircle2,
+  Clock,
+  MapPin,
+  ChevronRight,
 } from 'lucide-react';
 
 interface TimelineGridProps {
@@ -57,251 +60,317 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
     techWorkloads.set(a.technicianId, (techWorkloads.get(a.technicianId) || 0) + dur);
   }
 
-  const getPriorityStyle = (priority: Priority) => {
+  const getPriorityTheme = (priority: Priority) => {
     switch (priority) {
       case 'Emergency':
-        return 'bg-[#ffdad6] text-[#2E2E2E] border-red-700';
+        return {
+          bg: 'bg-[#ffdad6]',
+          border: 'border-red-700',
+          badge: 'bg-red-700 text-white',
+          accent: 'text-red-700',
+        };
       case 'High':
-        return 'bg-[#fde047] text-[#2E2E2E] border-[#2E2E2E]';
+        return {
+          bg: 'bg-[#fde047]',
+          border: 'border-[#222222]',
+          badge: 'bg-[#222222] text-white',
+          accent: 'text-amber-800',
+        };
       case 'Medium':
-        return 'bg-[#c8e6ff] text-[#2E2E2E] border-[#2E2E2E]';
+        return {
+          bg: 'bg-[#c8e6ff]',
+          border: 'border-[#222222]',
+          badge: 'bg-[#222222] text-white',
+          accent: 'text-sky-800',
+        };
       case 'Low':
       default:
-        return 'bg-white text-[#2E2E2E] border-[#2E2E2E]';
+        return {
+          bg: 'bg-white',
+          border: 'border-[#222222]',
+          badge: 'bg-stone-200 text-[#222222]',
+          accent: 'text-stone-700',
+        };
     }
   };
 
   return (
-    <div className="neo-card bg-white overflow-hidden flex flex-col h-full">
-      {/* Timeline Header (Time Scale) */}
-      <div className="flex border-b-[2.5px] border-[#2E2E2E] bg-[#F1F1F1] text-xs font-black select-none sticky top-0 z-20">
-        <div className="w-64 shrink-0 px-4 py-3 border-r-[2.5px] border-[#2E2E2E] flex items-center justify-between text-[#2E2E2E]">
-          <span className="uppercase tracking-wider">Technicians Roster</span>
-          <span className="text-[10px] font-bold text-stone-500 uppercase">Shift Capacity</span>
+    <div className="bg-white border-2 border-[#222222] shadow-[4px_4px_0_0_#222222] rounded-lg overflow-hidden flex flex-col h-full">
+      {/* Top Controls / Legend Bar */}
+      <div className="p-3 border-b-2 border-[#222222] bg-[#FAF8F5] flex flex-wrap items-center justify-between gap-3 text-xs font-bold">
+        <div className="flex items-center gap-2">
+          <span className="font-black uppercase tracking-wider text-[#222222]">
+            Daily Dispatch Timeline
+          </span>
+          <span className="bg-[#222222] text-white text-[10px] px-2 py-0.5 rounded-full font-mono">
+            {assignments.length} Scheduled
+          </span>
         </div>
-        <div className="flex-1 relative flex">
-          {HOURS.map((hour) => (
-            <div
-              key={hour}
-              className={`flex-1 py-3 text-center border-r-[1.5px] border-[#2E2E2E] last:border-r-0 font-mono text-[11px] font-bold ${
-                hour === '12:00' ? 'bg-[#fef08a] text-[#2E2E2E]' : 'text-stone-700'
-              }`}
-            >
-              <span>{hour}</span>
-            </div>
-          ))}
+
+        {/* Priority Legend */}
+        <div className="flex items-center gap-2 text-[11px] font-semibold text-stone-600">
+          <span className="flex items-center gap-1">
+            <span className="h-2.5 w-2.5 rounded-full bg-red-600 border border-[#222222]" /> Emergency
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#fde047] border border-[#222222]" /> High
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#c8e6ff] border border-[#222222]" /> Medium
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="h-2.5 w-2.5 rounded-full bg-white border border-[#222222]" /> Low
+          </span>
         </div>
       </div>
 
-      {/* Technician Rows */}
-      <div className="flex-1 divide-y-[2px] divide-[#2E2E2E] overflow-y-auto">
-        {technicians.map((tech) => {
-          const techAssignments = assignments.filter((a) => a.technicianId === tech.id);
-          const workload = techWorkloads.get(tech.id) || 0;
-          const capacityPercent = Math.min(100, Math.round((workload / tech.maxWorkloadMinutes) * 100));
+      {/* Scrollable Timeline Grid Container */}
+      <div className="flex-1 overflow-x-auto overflow-y-auto">
+        <div className="min-w-[980px]">
+          {/* Header Row: Hours Scale */}
+          <div className="flex border-b-2 border-[#222222] bg-[#F4F2EE] text-xs font-black select-none sticky top-0 z-20">
+            {/* Left Col Header */}
+            <div className="w-64 shrink-0 px-4 py-3 border-r-2 border-[#222222] flex items-center justify-between text-[#222222]">
+              <span className="uppercase tracking-wider">Technician</span>
+              <span className="text-[10px] font-bold text-stone-500 uppercase">Workload</span>
+            </div>
 
-          // Break calculations
-          const breakStartMins = tech.breakTime ? timeToMinutes(tech.breakTime.start) : null;
-          const breakEndMins = tech.breakTime ? timeToMinutes(tech.breakTime.end) : null;
-          const breakLeft =
-            breakStartMins !== null
-              ? ((breakStartMins - DAY_START_MINUTES) / DAY_TOTAL_MINUTES) * 100
-              : 0;
-          const breakWidth =
-            breakStartMins !== null && breakEndMins !== null
-              ? ((breakEndMins - breakStartMins) / DAY_TOTAL_MINUTES) * 100
-              : 0;
+            {/* Hours Headers */}
+            <div className="flex-1 relative flex">
+              {HOURS.map((hour) => (
+                <div
+                  key={hour}
+                  className={`flex-1 py-3 text-center border-r border-stone-300 last:border-r-0 font-mono text-[11px] font-bold ${
+                    hour === '12:00' ? 'bg-[#fef08a] text-[#222222] font-black' : 'text-stone-700'
+                  }`}
+                >
+                  <span>{hour}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-          const isUnavailable = tech.status === 'Unavailable';
+          {/* Technician Rows */}
+          <div className="divide-y-2 divide-[#222222]">
+            {technicians.map((tech) => {
+              const techAssignments = assignments.filter((a) => a.technicianId === tech.id);
+              const workload = techWorkloads.get(tech.id) || 0;
+              const capacityPercent = Math.min(100, Math.round((workload / tech.maxWorkloadMinutes) * 100));
 
-          return (
-            <div
-              key={tech.id}
-              className={`flex min-h-[96px] group transition-colors ${
-                isUnavailable ? 'bg-[#fff5f5]' : 'hover:bg-[#FAF8F5]'
-              }`}
-            >
-              {/* Technician Profile Card (Left) */}
-              <div className="w-64 shrink-0 p-3 border-r-[2.5px] border-[#2E2E2E] flex flex-col justify-between bg-white">
-                <div className="flex items-start gap-2.5">
-                  <div className="relative">
-                    <img
-                      src={tech.avatar}
-                      alt={tech.name}
-                      className="h-10 w-10 rounded-full object-cover border-[2px] border-[#2E2E2E] shadow-[1.5px_1.5px_0_0_#2E2E2E]"
-                    />
-                    <span
-                      className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-[1.5px] border-[#2E2E2E] ${
-                        isUnavailable ? 'bg-red-500' : 'bg-emerald-500'
-                      }`}
-                      title={tech.status}
-                    />
-                  </div>
+              // Lunch break position
+              const breakStartMins = tech.breakTime ? timeToMinutes(tech.breakTime.start) : null;
+              const breakEndMins = tech.breakTime ? timeToMinutes(tech.breakTime.end) : null;
+              const breakLeft =
+                breakStartMins !== null
+                  ? ((breakStartMins - DAY_START_MINUTES) / DAY_TOTAL_MINUTES) * 100
+                  : 0;
+              const breakWidth =
+                breakStartMins !== null && breakEndMins !== null
+                  ? ((breakEndMins - breakStartMins) / DAY_TOTAL_MINUTES) * 100
+                  : 0;
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-black uppercase text-[#2E2E2E] truncate">
-                        {tech.name}
-                      </h4>
-                      <span className="neo-badge bg-[#F1F1F1] text-[9px] py-0 px-1">
-                        {tech.assignedRegion}
-                      </span>
+              const isUnavailable = tech.status === 'Unavailable';
+
+              return (
+                <div
+                  key={tech.id}
+                  className={`flex min-h-[108px] transition-colors ${
+                    isUnavailable ? 'bg-red-50/60' : 'hover:bg-[#FAF8F5]'
+                  }`}
+                >
+                  {/* Left Column: Technician Profile Card */}
+                  <div className="w-64 shrink-0 p-3.5 border-r-2 border-[#222222] flex flex-col justify-between bg-white">
+                    <div className="flex items-start gap-2.5">
+                      <div className="relative shrink-0">
+                        <img
+                          src={tech.avatar}
+                          alt={tech.name}
+                          className="h-10 w-10 rounded-full object-cover border-2 border-[#222222] shadow-[2px_2px_0_0_#222222]"
+                        />
+                        <span
+                          className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${
+                            isUnavailable ? 'bg-red-500' : 'bg-emerald-500'
+                          }`}
+                          title={tech.status}
+                        />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <h4 className="text-xs font-black uppercase text-[#222222] truncate">
+                            {tech.name}
+                          </h4>
+                          <span className="border border-[#222222] bg-[#FAF8F5] text-[9px] font-bold px-1.5 py-0.2 rounded shrink-0">
+                            {tech.assignedRegion}
+                          </span>
+                        </div>
+
+                        {isUnavailable ? (
+                          <p className="text-[10px] text-red-600 font-bold flex items-center gap-1 mt-1">
+                            <UserX className="h-3 w-3 shrink-0" />
+                            <span className="truncate">{tech.disruptionReason || 'Unavailable'}</span>
+                          </p>
+                        ) : (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {tech.skills.map((skill) => (
+                              <span
+                                key={skill}
+                                className="bg-[#c8e6ff] text-[#222222] border border-[#222222] text-[9px] font-bold px-1 rounded"
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    {isUnavailable ? (
-                      <p className="text-[10px] text-red-600 font-black flex items-center gap-1 mt-0.5">
-                        <UserX className="h-3 w-3 shrink-0" />
-                        <span className="truncate">{tech.disruptionReason || 'Unavailable'}</span>
-                      </p>
-                    ) : (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {tech.skills.map((skill) => (
-                          <span
-                            key={skill}
-                            className="neo-badge bg-[#c8e6ff] text-[#2E2E2E] text-[8px] py-0 px-1 font-bold"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Capacity Progress Bar */}
-                <div className="mt-2">
-                  <div className="flex items-center justify-between text-[10px] font-black uppercase text-stone-600 mb-1">
-                    <span>
-                      {formatDuration(workload)} / {formatDuration(tech.maxWorkloadMinutes)}
-                    </span>
-                    <span
-                      className={`font-mono font-bold ${
-                        capacityPercent > 90
-                          ? 'text-red-600'
-                          : capacityPercent > 75
-                          ? 'text-amber-700'
-                          : 'text-stone-700'
-                      }`}
-                    >
-                      {capacityPercent}%
-                    </span>
-                  </div>
-                  <div className="h-2 w-full bg-[#F1F1F1] border-[1.5px] border-[#2E2E2E] rounded-xs overflow-hidden">
-                    <div
-                      className={`h-full transition-all duration-300 ${
-                        capacityPercent > 90
-                          ? 'bg-red-500'
-                          : capacityPercent > 75
-                          ? 'bg-amber-400'
-                          : 'bg-[#FF6F20]'
-                      }`}
-                      style={{ width: `${capacityPercent}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Timeline Track (Right) */}
-              <div className="flex-1 relative bg-white overflow-hidden">
-                {/* Vertical Hour Lines */}
-                <div className="absolute inset-0 flex pointer-events-none">
-                  {HOURS.map((hour) => (
-                    <div
-                      key={hour}
-                      className="flex-1 border-r-[1px] border-stone-200 last:border-r-0 h-full"
-                    />
-                  ))}
-                </div>
-
-                {/* Shaded Lunch Break Box */}
-                {tech.breakTime && (
-                  <div
-                    className="absolute top-0 bottom-0 bg-[#fef08a]/60 border-x-2 border-[#2E2E2E] flex items-center justify-center pointer-events-none select-none z-0"
-                    style={{
-                      left: `${breakLeft}%`,
-                      width: `${breakWidth}%`,
-                    }}
-                  >
-                    <span className="text-[10px] font-black uppercase tracking-wider text-[#2E2E2E]/60">
-                      Lunch Break
-                    </span>
-                  </div>
-                )}
-
-                {/* Assigned Job Blocks */}
-                {techAssignments.map((asg) => {
-                  const req = reqMap.get(asg.requestId);
-                  if (!req) return null;
-
-                  const startMins = timeToMinutes(asg.startTime);
-                  const endMins = timeToMinutes(asg.endTime);
-                  const left = ((startMins - DAY_START_MINUTES) / DAY_TOTAL_MINUTES) * 100;
-                  const width = ((endMins - startMins) / DAY_TOTAL_MINUTES) * 100;
-
-                  const isSelected = selectedAssignmentId === asg.id;
-                  const isLocked = asg.locked || asg.status === 'Completed';
-
-                  return (
-                    <div
-                      key={asg.id}
-                      onClick={() => onSelectAssignment(asg)}
-                      className={`absolute top-2 bottom-2 rounded-xs border-[2px] border-[#2E2E2E] shadow-[2.5px_2.5px_0_0_#2E2E2E] p-1.5 flex flex-col justify-between cursor-pointer transition-all duration-100 hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[4px_4px_0_0_#2E2E2E] z-10 select-none ${getPriorityStyle(
-                        req.priority
-                      )} ${
-                        isSelected
-                          ? 'ring-2 ring-black scale-[1.01] shadow-[5px_5px_0_0_#000] z-20'
-                          : ''
-                      }`}
-                      style={{
-                        left: `${Math.max(0, left)}%`,
-                        width: `${Math.min(100 - left, Math.max(9, width))}%`,
-                      }}
-                      title={`${req.id}: ${req.title} (${asg.startTime}–${asg.endTime})`}
-                    >
-                      <div className="flex items-center justify-between gap-1 overflow-hidden">
-                        <div className="flex items-center gap-1 min-w-0">
-                          {req.priority === 'Emergency' && (
-                            <Flame className="h-3 w-3 text-red-600 shrink-0 animate-pulse" />
-                          )}
-                          <span className="text-[11px] font-black font-mono tracking-tight text-[#2E2E2E] truncate">
-                            {req.id}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-1 shrink-0">
-                          {isLocked ? (
-                            <span className="neo-badge bg-[#86efac] text-[#14532d] text-[8px] py-0 px-1 font-black">
-                              <Lock className="h-2 w-2" />
-                              <span>Done</span>
-                            </span>
-                          ) : asg.status === 'Proposed' ? (
-                            <span className="neo-badge bg-white text-[#2E2E2E] text-[8px] py-0 px-1 font-black">
-                              <Sparkles className="h-2 w-2 text-[#FF6F20]" />
-                              <span>Draft</span>
-                            </span>
-                          ) : (
-                            <span className="neo-badge bg-[#86efac] text-[#14532d] text-[8px] py-0 px-1 font-black">
-                              Confirmed
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between text-[10px] mt-0.5">
-                        <p className="truncate font-bold text-[#2E2E2E] pr-1">
-                          {req.customer}
-                        </p>
-                        <span className="shrink-0 font-mono font-bold text-stone-700 text-[10px]">
-                          {asg.startTime}–{asg.endTime}
+                    {/* Capacity Meter */}
+                    <div className="mt-2 pt-1 border-t border-stone-200">
+                      <div className="flex items-center justify-between text-[10px] font-bold text-stone-600 mb-1">
+                        <span>
+                          {formatDuration(workload)} / {formatDuration(tech.maxWorkloadMinutes)}
+                        </span>
+                        <span
+                          className={`font-mono ${
+                            capacityPercent > 90
+                              ? 'text-red-600 font-black'
+                              : capacityPercent > 75
+                              ? 'text-amber-700 font-black'
+                              : 'text-stone-700'
+                          }`}
+                        >
+                          {capacityPercent}%
                         </span>
                       </div>
+                      <div className="h-2 w-full bg-[#E5E3DD] border border-[#222222] rounded-full overflow-hidden">
+                        <div
+                          className={`h-full transition-all duration-300 ${
+                            capacityPercent > 90
+                              ? 'bg-red-500'
+                              : capacityPercent > 75
+                              ? 'bg-amber-400'
+                              : 'bg-[#FF6F20]'
+                          }`}
+                          style={{ width: `${capacityPercent}%` }}
+                        />
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
+                  </div>
+
+                  {/* Right Column: Timeline Slot Track */}
+                  <div className="flex-1 relative bg-white overflow-hidden">
+                    {/* Hour Vertical Grid Lines */}
+                    <div className="absolute inset-0 flex pointer-events-none">
+                      {HOURS.map((hour) => (
+                        <div
+                          key={hour}
+                          className="flex-1 border-r border-stone-200 last:border-r-0 h-full"
+                        />
+                      ))}
+                    </div>
+
+                    {/* Shaded Lunch Break Window */}
+                    {tech.breakTime && (
+                      <div
+                        className="absolute top-0 bottom-0 bg-[#fef08a]/50 border-x-2 border-[#222222] flex items-center justify-center pointer-events-none select-none z-0"
+                        style={{
+                          left: `${breakLeft}%`,
+                          width: `${breakWidth}%`,
+                        }}
+                      >
+                        <span className="text-[10px] font-black uppercase tracking-wider text-[#222222]/60 bg-white/70 px-1.5 py-0.5 rounded border border-[#222222]/30">
+                          Lunch
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Assigned Job Blocks */}
+                    {techAssignments.map((asg) => {
+                      const req = reqMap.get(asg.requestId);
+                      if (!req) return null;
+
+                      const startMins = timeToMinutes(asg.startTime);
+                      const endMins = timeToMinutes(asg.endTime);
+                      const duration = endMins - startMins;
+                      const left = ((startMins - DAY_START_MINUTES) / DAY_TOTAL_MINUTES) * 100;
+                      const width = (duration / DAY_TOTAL_MINUTES) * 100;
+
+                      const isSelected = selectedAssignmentId === asg.id;
+                      const isLocked = asg.locked || asg.status === 'Completed';
+                      const theme = getPriorityTheme(req.priority);
+
+                      // Compact layout for shorter jobs (< 75 mins)
+                      const isCompact = duration < 75;
+
+                      return (
+                        <div
+                          key={asg.id}
+                          onClick={() => onSelectAssignment(asg)}
+                          className={`absolute top-2.5 bottom-2.5 rounded-md border-2 border-[#222222] shadow-[3px_3px_0_0_#222222] p-2 flex flex-col justify-between cursor-pointer transition-all duration-100 hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[5px_5px_0_0_#222222] z-10 select-none ${theme.bg} ${
+                            isSelected
+                              ? 'ring-2 ring-black scale-[1.02] shadow-[6px_6px_0_0_#000] z-20'
+                              : ''
+                          }`}
+                          style={{
+                            left: `${Math.max(0, left)}%`,
+                            width: `${Math.min(100 - left, Math.max(9, width))}%`,
+                          }}
+                          title={`${req.id}: ${req.title} (${asg.startTime}–${asg.endTime})`}
+                        >
+                          {/* Card Header */}
+                          <div className="flex items-center justify-between gap-1 overflow-hidden leading-tight">
+                            <div className="flex items-center gap-1 min-w-0">
+                              {req.priority === 'Emergency' && (
+                                <Flame className="h-3.5 w-3.5 text-red-600 shrink-0 animate-pulse" />
+                              )}
+                              <span className="font-mono text-xs font-black tracking-tight text-[#222222] truncate">
+                                {req.id}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1 shrink-0">
+                              {isLocked ? (
+                                <span className="bg-[#86efac] text-[#14532d] border border-[#222222] text-[8px] font-black px-1 rounded flex items-center gap-0.5">
+                                  <Lock className="h-2 w-2" /> Done
+                                </span>
+                              ) : asg.status === 'Proposed' ? (
+                                <span className="bg-white text-[#222222] border border-[#222222] text-[8px] font-black px-1 rounded flex items-center gap-0.5">
+                                  <Sparkles className="h-2 w-2 text-[#FF6F20]" /> Draft
+                                </span>
+                              ) : (
+                                <span className="bg-[#86efac] text-[#14532d] border border-[#222222] text-[8px] font-black px-1 rounded">
+                                  OK
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Customer / Title (shows cleanly when not super compact) */}
+                          {!isCompact && (
+                            <p className="text-[11px] font-bold text-[#222222] truncate leading-tight my-0.5">
+                              {req.customer}
+                            </p>
+                          )}
+
+                          {/* Card Footer: Time Slot */}
+                          <div className="flex items-center justify-between text-[10px] font-mono font-bold text-stone-700 pt-0.5">
+                            <span className="truncate">
+                              {asg.startTime}–{asg.endTime}
+                            </span>
+                            <span className="text-[9px] opacity-75 font-sans font-bold hidden sm:inline">
+                              {formatDuration(duration)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );

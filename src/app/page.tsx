@@ -62,6 +62,7 @@ export default function DispatchDashboard() {
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
   const [isManualModalOpen, setIsManualModalOpen] = useState<boolean>(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<'SPLIT' | 'TIMELINE_FULL'>('TIMELINE_FULL');
 
   // Load custom key from localStorage if present
   useEffect(() => {
@@ -579,10 +580,45 @@ export default function DispatchDashboard() {
           </div>
         )}
 
-        {/* Bento Grid: Left Gantt Timeline (7fr) & Right Unassigned Queue (5fr) */}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 flex-1 items-start">
+        {/* Layout Mode Selector & Workspace */}
+        <div className="flex items-center justify-between pb-1">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setViewMode('TIMELINE_FULL')}
+              className={`text-xs font-black uppercase px-3 py-1.5 rounded-md border-2 border-[#222222] transition-all cursor-pointer ${
+                viewMode === 'TIMELINE_FULL'
+                  ? 'bg-[#222222] text-white shadow-[2px_2px_0_0_#222222]'
+                  : 'bg-white text-stone-700 hover:bg-stone-100'
+              }`}
+            >
+              📅 Expansive Timeline View
+            </button>
+            <button
+              onClick={() => setViewMode('SPLIT')}
+              className={`text-xs font-black uppercase px-3 py-1.5 rounded-md border-2 border-[#222222] transition-all cursor-pointer ${
+                viewMode === 'SPLIT'
+                  ? 'bg-[#222222] text-white shadow-[2px_2px_0_0_#222222]'
+                  : 'bg-white text-stone-700 hover:bg-stone-100'
+              }`}
+            >
+              🗂️ Split View (Board + Queue)
+            </button>
+          </div>
+
+          {viewMode === 'TIMELINE_FULL' && unassignedIds.length > 0 && (
+            <button
+              onClick={() => setViewMode('SPLIT')}
+              className="text-xs font-black uppercase px-3 py-1.5 bg-[#fef08a] text-[#222222] border-2 border-[#222222] shadow-[2px_2px_0_0_#222222] rounded-md animate-bounce cursor-pointer"
+            >
+              ⚠️ {unassignedIds.length} Unassigned Tickets Waiting &rarr;
+            </button>
+          )}
+        </div>
+
+        {/* Dynamic Layout Grid */}
+        <div className={`grid grid-cols-1 ${viewMode === 'SPLIT' ? 'xl:grid-cols-12' : 'grid-cols-1'} gap-5 flex-1 items-start`}>
           {/* Gantt Timeline Board */}
-          <div className="xl:col-span-8 flex flex-col h-full min-h-[580px]">
+          <div className={`${viewMode === 'SPLIT' ? 'xl:col-span-8' : 'w-full'} flex flex-col h-full min-h-[580px]`}>
             <TimelineGrid
               technicians={technicians}
               requests={requests}
@@ -593,14 +629,16 @@ export default function DispatchDashboard() {
           </div>
 
           {/* Unassigned Queue */}
-          <div className="xl:col-span-4 flex flex-col h-full min-h-[580px]">
-            <ServiceRequestQueue
-              requests={requests}
-              unassignedIds={unassignedIds}
-              onSelectRequest={handleSelectQueueRequest}
-              onOpenManualAssign={handleOpenManualAssign}
-            />
-          </div>
+          {viewMode === 'SPLIT' && (
+            <div className="xl:col-span-4 flex flex-col h-full min-h-[580px]">
+              <ServiceRequestQueue
+                requests={requests}
+                unassignedIds={unassignedIds}
+                onSelectRequest={handleSelectQueueRequest}
+                onOpenManualAssign={handleOpenManualAssign}
+              />
+            </div>
+          )}
         </div>
       </div>
 

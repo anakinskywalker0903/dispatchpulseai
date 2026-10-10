@@ -40,34 +40,34 @@ export const ServiceRequestQueue: React.FC<ServiceRequestQueueProps> = ({
       case 'Emergency':
         return 'bg-[#ffdad6] text-red-900 border-red-700 animate-pulse';
       case 'High':
-        return 'bg-[#fde047] text-[#2E2E2E] border-[#2E2E2E]';
+        return 'bg-[#fde047] text-[#222222] border-[#222222]';
       case 'Medium':
-        return 'bg-[#c8e6ff] text-[#2E2E2E] border-[#2E2E2E]';
+        return 'bg-[#c8e6ff] text-[#222222] border-[#222222]';
       case 'Low':
       default:
-        return 'bg-[#F1F1F1] text-stone-700 border-[#2E2E2E]';
+        return 'bg-[#F4F2EE] text-stone-700 border-[#222222]';
     }
   };
 
   return (
-    <div className="neo-card bg-white flex flex-col h-full overflow-hidden">
+    <div className="bg-white border-2 border-[#222222] shadow-[4px_4px_0_0_#222222] rounded-lg flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="p-3.5 border-b-[2.5px] border-[#2E2E2E] bg-[#F1F1F1] space-y-2.5">
+      <div className="p-3.5 border-b-2 border-[#222222] bg-[#FAF8F5] space-y-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 neo-box-sm bg-[#FF6F20] text-white flex items-center justify-center">
-              <Inbox className="h-3.5 w-3.5" />
+            <div className="h-7 w-7 rounded-md bg-[#FF6F20] border border-[#222222] text-white flex items-center justify-center">
+              <Inbox className="h-4 w-4" />
             </div>
-            <h3 className="text-xs font-black uppercase tracking-wider text-[#2E2E2E]">
+            <h3 className="text-xs font-black uppercase tracking-wider text-[#222222]">
               Unassigned Queue
             </h3>
-            <span className="neo-badge bg-[#2E2E2E] text-white text-[10px] py-0 px-1.5">
+            <span className="bg-[#222222] text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded-full">
               {unassignedRequests.length}
             </span>
           </div>
         </div>
 
-        {/* Filter Chips Row (Stylist AI style) */}
+        {/* Filter Chips */}
         <div className="flex flex-wrap gap-1.5 pt-0.5">
           {['ALL', 'Emergency', 'High', 'Medium', 'Low'].map((p) => {
             const isActive = filterPriority === p;
@@ -75,10 +75,10 @@ export const ServiceRequestQueue: React.FC<ServiceRequestQueueProps> = ({
               <button
                 key={p}
                 onClick={() => setFilterPriority(p)}
-                className={`neo-badge text-[10px] py-0.5 px-2 cursor-pointer transition-all ${
+                className={`text-[10px] font-bold px-2 py-0.5 rounded border transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-[#2E2E2E] text-white border-[#2E2E2E] shadow-[1.5px_1.5px_0_0_#2E2E2E]'
-                    : 'bg-white text-stone-700 hover:bg-stone-100'
+                    ? 'bg-[#222222] text-white border-[#222222] shadow-[1.5px_1.5px_0_0_#222222]'
+                    : 'bg-white text-stone-700 border-stone-300 hover:bg-stone-100'
                 }`}
               >
                 {p}
@@ -89,13 +89,13 @@ export const ServiceRequestQueue: React.FC<ServiceRequestQueueProps> = ({
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto p-2.5 space-y-2">
+      <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-48 text-center p-4">
-            <div className="h-10 w-10 neo-box-sm bg-[#86efac] text-[#14532d] flex items-center justify-center mb-2">
+          <div className="flex flex-col items-center justify-center py-8 text-center p-4 bg-[#FAF8F5] border border-dashed border-stone-300 rounded-md">
+            <div className="h-9 w-9 rounded-full bg-[#86efac] border border-[#222222] text-[#14532d] flex items-center justify-center mb-1.5">
               <CheckCircle className="h-5 w-5" />
             </div>
-            <p className="text-xs font-black uppercase text-[#2E2E2E]">Queue Clear</p>
+            <p className="text-xs font-black uppercase text-[#222222]">Queue Clear</p>
             <p className="text-[11px] font-medium text-stone-500 mt-0.5">
               {unassignedRequests.length === 0
                 ? 'All requests have been scheduled for the day.'
@@ -106,13 +106,13 @@ export const ServiceRequestQueue: React.FC<ServiceRequestQueueProps> = ({
           filtered.map((req) => (
             <div
               key={req.id}
-              className="neo-card-sm p-3 bg-white space-y-2 hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+              className="bg-white border-2 border-[#222222] shadow-[2px_2px_0_0_#222222] rounded-md p-3 space-y-2 hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span
-                      className={`neo-badge text-[9px] py-0 px-1.5 font-black ${getPriorityBadgeClass(
+                      className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${getPriorityBadgeClass(
                         req.priority
                       )}`}
                     >
@@ -122,39 +122,39 @@ export const ServiceRequestQueue: React.FC<ServiceRequestQueueProps> = ({
                     <span className="text-[11px] font-mono font-black text-stone-600">
                       {req.id}
                     </span>
-                    <span className="text-xs font-bold text-[#2E2E2E] truncate">
+                    <span className="text-xs font-bold text-[#222222] truncate">
                       • {req.customer}
                     </span>
                   </div>
-                  <h4 className="text-xs font-black text-[#2E2E2E] mt-1 line-clamp-1">
+                  <h4 className="text-xs font-black text-[#222222] mt-1 line-clamp-1">
                     {req.title}
                   </h4>
                 </div>
 
                 <button
                   onClick={() => onOpenManualAssign(req)}
-                  className="neo-btn neo-btn-orange text-[10px] py-1 px-2.5 shrink-0"
+                  className="bg-[#FF6F20] text-white border border-[#222222] shadow-[1.5px_1.5px_0_0_#222222] rounded text-[10px] font-black uppercase py-1 px-2.5 shrink-0 hover:bg-[#e85e10] cursor-pointer"
                 >
                   Assign
                 </button>
               </div>
 
               {/* Tag Chips */}
-              <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold text-[#2E2E2E]">
-                <span className="neo-badge bg-[#c8e6ff] text-[9px] py-0 px-1.5">
+              <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold text-[#222222]">
+                <span className="bg-[#c8e6ff] border border-[#222222] text-[9px] py-0 px-1.5 rounded">
                   <Wrench className="h-2.5 w-2.5 inline mr-1 text-[#FF6F20]" />
                   {req.requiredSkill}
                 </span>
-                <span className="neo-badge bg-[#F1F1F1] text-[9px] py-0 px-1.5 text-stone-600">
+                <span className="bg-[#FAF8F5] border border-stone-300 text-[9px] py-0 px-1.5 rounded text-stone-600">
                   <MapPin className="h-2.5 w-2.5 inline mr-0.5" />
                   {req.region}
                 </span>
-                <span className="neo-badge bg-[#F1F1F1] text-[9px] py-0 px-1.5 text-stone-600">
+                <span className="bg-[#FAF8F5] border border-stone-300 text-[9px] py-0 px-1.5 rounded text-stone-600">
                   <Clock className="h-2.5 w-2.5 inline mr-0.5" />
                   {formatDuration(req.estimatedDuration)}
                 </span>
                 {req.preferredTimeWindow && (
-                  <span className="neo-badge bg-[#fef08a] text-[9px] py-0 px-1.5">
+                  <span className="bg-[#fef08a] border border-[#222222] text-[9px] py-0 px-1.5 rounded">
                     Pref: {req.preferredTimeWindow.start}–{req.preferredTimeWindow.end}
                   </span>
                 )}
@@ -162,7 +162,7 @@ export const ServiceRequestQueue: React.FC<ServiceRequestQueueProps> = ({
 
               {/* Missing Information Banner */}
               {req.missingInfoFlags && req.missingInfoFlags.length > 0 && (
-                <div className="neo-card-sm bg-[#fef08a] p-1.5 text-[10px] font-bold text-[#2E2E2E] flex items-start gap-1">
+                <div className="bg-[#fef08a] border border-[#222222] rounded p-1.5 text-[10px] font-bold text-[#222222] flex items-start gap-1">
                   <AlertTriangle className="h-3 w-3 text-[#FF6F20] shrink-0 mt-0.5" />
                   <span>{req.missingInfoFlags[0]}</span>
                 </div>

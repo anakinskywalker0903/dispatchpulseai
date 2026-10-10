@@ -24,54 +24,55 @@ export const ApprovalBanner: React.FC<ApprovalBannerProps> = ({
   }
 
   return (
-    <div className="neo-card bg-[#fef08a] p-4 text-[#2E2E2E] space-y-3">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="h-10 w-10 neo-box-sm bg-[#FF6F20] text-white flex items-center justify-center shrink-0">
-            <Sparkles className="h-5 w-5 animate-pulse" />
+    <div className="bg-[#fef08a] border-2 border-[#222222] shadow-[4px_4px_0_0_#222222] rounded-lg p-4 text-[#222222]">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        {/* Left: Proposal Summary */}
+        <div className="flex items-start gap-3.5">
+          <div className="h-11 w-11 rounded-lg bg-[#FF6F20] border-2 border-[#222222] shadow-[2px_2px_0_0_#222222] text-white flex items-center justify-center shrink-0">
+            <Sparkles className="h-6 w-6" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="neo-badge bg-white text-[#2E2E2E] text-[10px]">
-                HUMAN-IN-THE-LOOP APPROVAL GATE
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="bg-[#222222] text-white text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider">
+                Human-in-the-Loop Review
               </span>
-              <span className="neo-badge bg-[#2E2E2E] text-white text-[10px]">
+              <span className="bg-white text-[#222222] border border-[#222222] text-[10px] font-bold px-2 py-0.5 rounded font-mono">
                 DRAFT PROPOSAL v{version.versionNumber}
               </span>
             </div>
-            <p className="text-sm font-extrabold text-[#2E2E2E] mt-1 leading-snug">
+            <p className="text-sm font-extrabold text-[#222222] mt-1.5 leading-snug">
               {version.summary}
             </p>
             {version.diffFromPrevious && (
-              <p className="text-xs font-semibold text-stone-700 mt-0.5">
+              <p className="text-xs font-semibold text-stone-700 mt-1">
                 {version.diffFromPrevious.explanation}
               </p>
             )}
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2 self-start md:self-center shrink-0">
+        {/* Right: Explicit Neo-Brutalist Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-start lg:self-center">
           <button
             onClick={onViewRationale}
-            className="neo-btn neo-btn-white text-xs py-2 px-3 flex items-center gap-1.5"
+            className="inline-flex items-center gap-1.5 bg-white text-[#222222] border-2 border-[#222222] shadow-[3px_3px_0_0_#222222] rounded-md px-3.5 py-2 text-xs font-black uppercase tracking-wide hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[4px_4px_0_0_#222222] transition-all cursor-pointer"
           >
-            <span>Review Diff & Trade-Offs</span>
-            <ArrowRight className="h-3.5 w-3.5" />
+            <span>Review Diff & Rationale</span>
+            <ArrowRight className="h-3.5 w-3.5 text-[#FF6F20]" />
           </button>
 
           <button
             onClick={onReject}
-            className="neo-btn neo-btn-white text-xs py-2 px-3 flex items-center gap-1.5 text-red-700 hover:bg-[#ffdad6]"
+            className="inline-flex items-center gap-1.5 bg-white text-red-700 border-2 border-red-700 shadow-[2px_2px_0_0_#b91c1c] rounded-md px-3 py-2 text-xs font-bold uppercase tracking-wide hover:bg-red-50 transition-all cursor-pointer"
           >
-            <XCircle className="h-3.5 w-3.5 text-red-600" />
+            <XCircle className="h-3.5 w-3.5" />
             <span>Reject Draft</span>
           </button>
 
           <button
             onClick={onApprove}
             disabled={hasErrors}
-            className="neo-btn neo-btn-orange text-xs py-2 px-4 flex items-center gap-1.5 font-black"
+            className="inline-flex items-center gap-1.5 bg-[#FF6F20] text-white border-2 border-[#222222] shadow-[3px_3px_0_0_#222222] rounded-md px-4 py-2 text-xs font-black uppercase tracking-wide hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[5px_5px_0_0_#222222] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ShieldCheck className="h-4 w-4" />
             <span>Approve & Dispatch</span>
