@@ -17,95 +17,98 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  const getChannelIcon = (channel: MockNotification['channel']) => {
+  const getChannelBadge = (channel: MockNotification['channel']) => {
     switch (channel) {
       case 'SMS':
-        return <MessageSquare className="h-3.5 w-3.5 text-emerald-400" />;
+        return { icon: <MessageSquare className="h-3 w-3 inline mr-1 text-emerald-700" />, label: 'SMS', color: 'bg-[#86efac] text-[#14532d]' };
       case 'Push Notification':
-        return <Smartphone className="h-3.5 w-3.5 text-indigo-400" />;
+        return { icon: <Smartphone className="h-3 w-3 inline mr-1 text-[#FF6F20]" />, label: 'Push', color: 'bg-[#fef08a] text-[#2E2E2E]' };
       case 'Email':
       default:
-        return <Mail className="h-3.5 w-3.5 text-amber-400" />;
+        return { icon: <Mail className="h-3 w-3 inline mr-1 text-sky-700" />, label: 'Email', color: 'bg-[#c8e6ff] text-[#2E2E2E]' };
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="w-full max-w-md bg-slate-950 border-l border-slate-800 h-full flex flex-col shadow-2xl">
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs animate-in fade-in duration-100">
+      <div className="w-full max-w-md bg-white border-l-[3px] border-[#2E2E2E] shadow-[-6px_0_0_0_#2E2E2E] h-full flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-slate-800 bg-slate-900/90 flex items-center justify-between">
+        <div className="p-4 border-b-[2.5px] border-[#2E2E2E] bg-[#FF6F20] text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-              <Bell className="h-4 w-4" />
+            <div className="h-9 w-9 neo-box-sm bg-white text-[#2E2E2E] flex items-center justify-center">
+              <Bell className="h-5 w-5 text-[#FF6F20]" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">
-                Mocked Dispatch Notifications
+              <h3 className="text-sm font-black uppercase tracking-tight text-white">
+                Dispatch Notifications
               </h3>
-              <p className="text-xs text-slate-400">
-                Simulated SMS & Push alerts dispatched to field staff & clients
+              <p className="text-[11px] font-bold text-white/90">
+                Simulated SMS & Push alerts dispatched to staff & clients
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+            className="p-1 neo-box-sm bg-white hover:bg-stone-100 text-[#2E2E2E]"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#FAF8F5]">
           {notifications.length === 0 ? (
-            <div className="text-center p-8 text-xs text-slate-500">
+            <div className="text-center p-8 text-xs font-bold text-stone-500">
               No notifications generated yet. Approve a schedule proposal to trigger automated alerts.
             </div>
           ) : (
-            notifications.map((n) => (
-              <div
-                key={n.id}
-                className="p-3.5 rounded-lg border border-slate-800/80 bg-slate-900/50 space-y-2 text-xs"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    {getChannelIcon(n.channel)}
-                    <span className="font-semibold text-slate-200">
-                      {n.recipient}
-                    </span>
-                    <span className="text-[10px] text-slate-500">
-                      ({n.recipientRole})
+            notifications.map((n) => {
+              const badge = getChannelBadge(n.channel);
+
+              return (
+                <div
+                  key={n.id}
+                  className="neo-card-sm p-3.5 bg-white space-y-2 text-xs"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className={`neo-badge text-[9px] py-0 px-1.5 font-bold ${badge.color}`}>
+                        {badge.icon}
+                        {badge.label}
+                      </span>
+                      <span className="font-black text-[#2E2E2E]">
+                        {n.recipient}
+                      </span>
+                    </div>
+
+                    <span className="text-[10px] text-stone-500 font-mono font-bold">
+                      {new Date(n.timestamp).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
                     </span>
                   </div>
 
-                  <span className="text-[10px] text-slate-500 font-mono">
-                    {new Date(n.timestamp).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit',
-                    })}
-                  </span>
-                </div>
+                  <p className="font-black text-xs text-[#2E2E2E]">{n.subject}</p>
+                  <p className="text-xs font-mono font-bold bg-[#F1F1F1] p-2 border border-[#2E2E2E] text-stone-700">
+                    "{n.body}"
+                  </p>
 
-                <p className="text-xs text-slate-300 font-medium">{n.subject}</p>
-                <p className="text-xs text-slate-400 bg-slate-950/80 p-2 rounded border border-slate-900 italic">
-                  "{n.body}"
-                </p>
-
-                <div className="flex items-center justify-end gap-1 text-[10px] text-emerald-400 font-medium">
-                  <CheckCircle2 className="h-3 w-3" />
-                  <span>Delivered (Simulated)</span>
+                  <div className="flex items-center justify-end gap-1 text-[10px] text-emerald-800 font-black uppercase">
+                    <CheckCircle2 className="h-3 w-3" />
+                    <span>Delivered (Mocked)</span>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-slate-800 bg-slate-900/90 flex justify-end">
+        <div className="p-3 border-t-[2.5px] border-[#2E2E2E] bg-white flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-xs font-semibold text-slate-300 hover:text-white"
+            className="neo-btn neo-btn-white text-xs py-1.5 px-4 font-black"
           >
             Close
           </button>

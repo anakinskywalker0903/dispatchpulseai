@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ServiceRequest, Priority, Skill } from '@/lib/types';
+import { ServiceRequest, Priority } from '@/lib/types';
 import { formatDuration } from '@/lib/timeUtils';
 import {
   Inbox,
@@ -10,8 +10,6 @@ import {
   MapPin,
   Wrench,
   Flame,
-  ChevronRight,
-  Filter,
   CheckCircle,
 } from 'lucide-react';
 
@@ -37,124 +35,135 @@ export const ServiceRequestQueue: React.FC<ServiceRequestQueueProps> = ({
     return r.priority === filterPriority;
   });
 
-  const getPriorityBadge = (priority: Priority) => {
+  const getPriorityBadgeClass = (priority: Priority) => {
     switch (priority) {
       case 'Emergency':
-        return 'bg-rose-950/80 text-rose-300 border-rose-800 animate-pulse';
+        return 'bg-[#ffdad6] text-red-900 border-red-700 animate-pulse';
       case 'High':
-        return 'bg-amber-950/80 text-amber-300 border-amber-800';
+        return 'bg-[#fde047] text-[#2E2E2E] border-[#2E2E2E]';
       case 'Medium':
-        return 'bg-indigo-950/80 text-indigo-300 border-indigo-800';
+        return 'bg-[#c8e6ff] text-[#2E2E2E] border-[#2E2E2E]';
       case 'Low':
       default:
-        return 'bg-slate-800 text-slate-400 border-slate-700';
+        return 'bg-[#F1F1F1] text-stone-700 border-[#2E2E2E]';
     }
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-950 rounded-xl border border-slate-800 shadow-xl overflow-hidden">
+    <div className="neo-card bg-white flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="p-3.5 border-b border-slate-800 bg-slate-900/90 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Inbox className="h-4 w-4 text-indigo-400" />
-          <h3 className="text-sm font-semibold text-slate-200">
-            Unassigned Queue
-          </h3>
-          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs font-bold text-slate-300 border border-slate-700">
-            {unassignedRequests.length}
-          </span>
+      <div className="p-3.5 border-b-[2.5px] border-[#2E2E2E] bg-[#F1F1F1] space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 neo-box-sm bg-[#FF6F20] text-white flex items-center justify-center">
+              <Inbox className="h-3.5 w-3.5" />
+            </div>
+            <h3 className="text-xs font-black uppercase tracking-wider text-[#2E2E2E]">
+              Unassigned Queue
+            </h3>
+            <span className="neo-badge bg-[#2E2E2E] text-white text-[10px] py-0 px-1.5">
+              {unassignedRequests.length}
+            </span>
+          </div>
         </div>
 
-        {/* Priority Filter */}
-        <div className="flex items-center gap-1 text-xs">
-          <Filter className="h-3 w-3 text-slate-500" />
-          <select
-            value={filterPriority}
-            onChange={(e) => setFilterPriority(e.target.value)}
-            className="rounded bg-slate-950 border border-slate-800 px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-indigo-500"
-          >
-            <option value="ALL">All ({unassignedRequests.length})</option>
-            <option value="Emergency">Emergency</option>
-            <option value="High">High</option>
-            <option value="Medium">Medium</option>
-            <option value="Low">Low</option>
-          </select>
+        {/* Filter Chips Row (Stylist AI style) */}
+        <div className="flex flex-wrap gap-1.5 pt-0.5">
+          {['ALL', 'Emergency', 'High', 'Medium', 'Low'].map((p) => {
+            const isActive = filterPriority === p;
+            return (
+              <button
+                key={p}
+                onClick={() => setFilterPriority(p)}
+                className={`neo-badge text-[10px] py-0.5 px-2 cursor-pointer transition-all ${
+                  isActive
+                    ? 'bg-[#2E2E2E] text-white border-[#2E2E2E] shadow-[1.5px_1.5px_0_0_#2E2E2E]'
+                    : 'bg-white text-stone-700 hover:bg-stone-100'
+                }`}
+              >
+                {p}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto divide-y divide-slate-800/60 p-2 space-y-1">
+      <div className="flex-1 overflow-y-auto p-2.5 space-y-2">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-48 text-center p-4 text-slate-500">
-            <CheckCircle className="h-8 w-8 text-emerald-500/60 mb-2" />
-            <p className="text-sm font-medium text-slate-300">Queue is Clear</p>
-            <p className="text-xs text-slate-500 mt-0.5">
+          <div className="flex flex-col items-center justify-center h-48 text-center p-4">
+            <div className="h-10 w-10 neo-box-sm bg-[#86efac] text-[#14532d] flex items-center justify-center mb-2">
+              <CheckCircle className="h-5 w-5" />
+            </div>
+            <p className="text-xs font-black uppercase text-[#2E2E2E]">Queue Clear</p>
+            <p className="text-[11px] font-medium text-stone-500 mt-0.5">
               {unassignedRequests.length === 0
-                ? 'All requests have been successfully scheduled.'
-                : 'No unassigned requests match the selected filter.'}
+                ? 'All requests have been scheduled for the day.'
+                : 'No unassigned tickets match this priority filter.'}
             </p>
           </div>
         ) : (
           filtered.map((req) => (
             <div
               key={req.id}
-              className="p-3 rounded-lg border border-slate-800/80 bg-slate-900/60 hover:bg-slate-900 hover:border-slate-700 transition-all group"
+              className="neo-card-sm p-3 bg-white space-y-2 hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${getPriorityBadge(
+                      className={`neo-badge text-[9px] py-0 px-1.5 font-black ${getPriorityBadgeClass(
                         req.priority
                       )}`}
                     >
+                      {req.priority === 'Emergency' && <Flame className="h-2.5 w-2.5 inline mr-0.5" />}
                       {req.priority}
                     </span>
-                    <span className="text-xs font-mono font-semibold text-slate-400">
+                    <span className="text-[11px] font-mono font-black text-stone-600">
                       {req.id}
                     </span>
-                    <span className="text-xs font-medium text-slate-300 truncate">
-                      {req.customer}
+                    <span className="text-xs font-bold text-[#2E2E2E] truncate">
+                      • {req.customer}
                     </span>
                   </div>
-                  <h4 className="text-sm font-semibold text-slate-100 mt-1 line-clamp-1">
+                  <h4 className="text-xs font-black text-[#2E2E2E] mt-1 line-clamp-1">
                     {req.title}
                   </h4>
                 </div>
 
                 <button
                   onClick={() => onOpenManualAssign(req)}
-                  className="rounded bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 px-2 py-1 text-xs font-semibold hover:bg-indigo-600 hover:text-white transition-colors shrink-0"
+                  className="neo-btn neo-btn-orange text-[10px] py-1 px-2.5 shrink-0"
                 >
                   Assign
                 </button>
               </div>
 
-              {/* Tags */}
-              <div className="flex flex-wrap items-center gap-2 mt-2 text-[11px] text-slate-400">
-                <span className="flex items-center gap-1 bg-slate-800/70 px-1.5 py-0.5 rounded">
-                  <Wrench className="h-3 w-3 text-indigo-400" />
-                  <span>{req.requiredSkill}</span>
+              {/* Tag Chips */}
+              <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold text-[#2E2E2E]">
+                <span className="neo-badge bg-[#c8e6ff] text-[9px] py-0 px-1.5">
+                  <Wrench className="h-2.5 w-2.5 inline mr-1 text-[#FF6F20]" />
+                  {req.requiredSkill}
                 </span>
-                <span className="flex items-center gap-1 bg-slate-800/70 px-1.5 py-0.5 rounded">
-                  <MapPin className="h-3 w-3 text-slate-500" />
-                  <span>{req.region}</span>
+                <span className="neo-badge bg-[#F1F1F1] text-[9px] py-0 px-1.5 text-stone-600">
+                  <MapPin className="h-2.5 w-2.5 inline mr-0.5" />
+                  {req.region}
                 </span>
-                <span className="flex items-center gap-1 bg-slate-800/70 px-1.5 py-0.5 rounded">
-                  <Clock className="h-3 w-3 text-slate-500" />
-                  <span>{formatDuration(req.estimatedDuration)}</span>
+                <span className="neo-badge bg-[#F1F1F1] text-[9px] py-0 px-1.5 text-stone-600">
+                  <Clock className="h-2.5 w-2.5 inline mr-0.5" />
+                  {formatDuration(req.estimatedDuration)}
                 </span>
                 {req.preferredTimeWindow && (
-                  <span className="text-indigo-400 bg-indigo-950/40 px-1.5 py-0.5 rounded border border-indigo-900/50">
+                  <span className="neo-badge bg-[#fef08a] text-[9px] py-0 px-1.5">
                     Pref: {req.preferredTimeWindow.start}–{req.preferredTimeWindow.end}
                   </span>
                 )}
               </div>
 
-              {/* Missing Information Alerts */}
+              {/* Missing Information Banner */}
               {req.missingInfoFlags && req.missingInfoFlags.length > 0 && (
-                <div className="mt-2 rounded bg-amber-950/40 border border-amber-900/50 p-1.5 text-[11px] text-amber-300 flex items-start gap-1.5">
-                  <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />
+                <div className="neo-card-sm bg-[#fef08a] p-1.5 text-[10px] font-bold text-[#2E2E2E] flex items-start gap-1">
+                  <AlertTriangle className="h-3 w-3 text-[#FF6F20] shrink-0 mt-0.5" />
                   <span>{req.missingInfoFlags[0]}</span>
                 </div>
               )}

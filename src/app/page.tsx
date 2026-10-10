@@ -18,6 +18,7 @@ import { validateSchedule } from '@/lib/constraintEngine';
 import { solveScheduleDeterministically } from '@/lib/heuristicSolver';
 import { computeScheduleDiff } from '@/lib/diffEngine';
 
+import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
 import { ApprovalBanner } from '@/components/ApprovalBanner';
 import { TimelineGrid } from '@/components/TimelineGrid';
@@ -28,6 +29,7 @@ import { VersionHistoryModal } from '@/components/VersionHistoryModal';
 import { AuditLogDrawer } from '@/components/AuditLogDrawer';
 import { NotificationsDrawer } from '@/components/NotificationsDrawer';
 import { RequestDetailModal } from '@/components/RequestDetailModal';
+import { ApiKeyModal } from '@/components/ApiKeyModal';
 
 export default function DispatchDashboard() {
   // Primary Domain State
@@ -44,12 +46,16 @@ export default function DispatchDashboard() {
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [notifications, setNotifications] = useState<MockNotification[]>([]);
 
+  // API Key State (Client Override or Vercel Env)
+  const [groqApiKey, setGroqApiKey] = useState<string>('');
+
   // UI & Drawer States
   const [isPlanning, setIsPlanning] = useState<boolean>(false);
   const [isAssistantOpen, setIsAssistantOpen] = useState<boolean>(false);
   const [isVersionModalOpen, setIsVersionModalOpen] = useState<boolean>(false);
   const [isAuditModalOpen, setIsAuditModalOpen] = useState<boolean>(false);
   const [isNotifModalOpen, setIsNotifModalOpen] = useState<boolean>(false);
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState<boolean>(false);
 
   // Selection & Modal States
   const [selectedAssignment, setSelectedAssignment] = useState<ScheduleAssignment | null>(null);
@@ -57,9 +63,31 @@ export default function DispatchDashboard() {
   const [isManualModalOpen, setIsManualModalOpen] = useState<boolean>(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
 
+  // Load custom key from localStorage if present
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('dispatchpulse_groq_key');
+      if (stored) setGroqApiKey(stored);
+    } catch (e) {
+      // Ignore localStorage errors
+    }
+  }, []);
+
+  const handleSaveApiKey = (newKey: string) => {
+    setGroqApiKey(newKey);
+    try {
+      if (newKey) {
+        localStorage.setItem('dispatchpulse_groq_key', newKey);
+      } else {
+        localStorage.removeItem('dispatchpulse_groq_key');
+      }
+    } catch (e) {
+      // Ignore
+    }
+  };
+
   // Initialize Initial Schedule (Baseline Plan v1)
   useEffect(() => {
-    // Generate initial baseline schedule
     const baseline = solveScheduleDeterministically(
       INITIAL_TECHNICIANS,
       INITIAL_SERVICE_REQUESTS
@@ -84,11 +112,10 @@ export default function DispatchDashboard() {
     setVersions([initialVersion]);
     setCurrentVersion(initialVersion);
 
-    // Initial Audit Entry
     addAuditEntry(
       'PLAN_PROPOSED',
       'AI_AGENT',
-      'Initial baseline dispatch plan v1 proposed by AI Agent',
+      'Initial baseline dispatch plan v1 formulated by AI Agent',
       { assignedCount: baseline.assignments.length, unassignedCount: baseline.unassignedRequestIds.length }
     );
   }, []);
@@ -144,9 +171,14 @@ export default function DispatchDashboard() {
     setIsPlanning(true);
 
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (groqApiKey && groqApiKey.trim()) {
+        headers['x-groq-key'] = groqApiKey.trim();
+      }
+
       const res = await fetch('/api/plan', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           technicians,
           requests,
@@ -160,7 +192,6 @@ export default function DispatchDashboard() {
       if (data.success && data.plan) {
         const nextVersionNum = (currentVersion?.versionNumber || 1) + 1;
 
-        // Compute diff from current version
         const diff = computeScheduleDiff(
           assignments,
           data.plan.assignments,
@@ -197,7 +228,7 @@ export default function DispatchDashboard() {
         addAuditEntry(
           disruptionContext ? 'PLAN_REVISED' : 'PLAN_PROPOSED',
           'AI_AGENT',
-          `AI Agent generated Schedule Proposal v${nextVersionNum} (${data.plan.source})`,
+          `AI Agent formulated Schedule Proposal v${nextVersionNum} (${data.plan.source})`,
           { summary: data.plan.summary, tradeOffs: data.plan.tradeOffs }
         );
 
@@ -229,7 +260,6 @@ export default function DispatchDashboard() {
     );
     setAssignments(approvedVersion.assignments);
 
-    // Audit Log
     addAuditEntry(
       'PLAN_APPROVED',
       'DISPATCHER',
@@ -237,7 +267,7 @@ export default function DispatchDashboard() {
       { assignmentCount: approvedVersion.assignments.length }
     );
 
-    // Mock Notifications sent out
+    // Mock Notifications
     technicians.forEach((t) => {
       const techJobs = approvedVersion.assignments.filter((a) => a.technicianId === t.id);
       if (techJobs.length > 0) {
@@ -251,7 +281,6 @@ export default function DispatchDashboard() {
       }
     });
 
-    // Notify customers
     approvedVersion.assignments.slice(0, 3).forEach((a) => {
       const req = requests.find((r) => r.id === a.requestId);
       const tech = technicians.find((t) => t.id === a.technicianId);
@@ -267,7 +296,7 @@ export default function DispatchDashboard() {
     });
   };
 
-  // Reject / Discard Draft
+  // Reject Draft
   const handleRejectPlan = () => {
     if (!currentVersion || versions.length <= 1) return;
     const previousVersion = versions[versions.length - 2];
@@ -284,7 +313,6 @@ export default function DispatchDashboard() {
 
   // Simulate Technician Breakdown Disruption
   const handleSimulateTechDisruption = async () => {
-    // Marcus Vance breakdown simulation
     const targetTechId = 'TECH-2';
     const updatedTechs = technicians.map((t) => {
       if (t.id === targetTechId) {
@@ -313,7 +341,6 @@ export default function DispatchDashboard() {
       'Your shift has been suspended due to vehicle breakdown report. Stand by for fleet roadside assistance.'
     );
 
-    // Trigger AI Replanner with disruption context
     await handleRunAIPlanning({
       type: 'TECHNICIAN_CANCELLATION',
       cancelledTechnicianId: targetTechId,
@@ -323,7 +350,6 @@ export default function DispatchDashboard() {
 
   // Simulate Emergency Work Order Disruption
   const handleSimulateEmergency = async () => {
-    // Check if emergency request is already added
     if (requests.some((r) => r.id === EMERGENCY_SIMULATION_REQUEST.id)) {
       alert('Emergency request SR-999 is already in the system.');
       return;
@@ -347,7 +373,6 @@ export default function DispatchDashboard() {
       'St. Jude Hospital reported ICU generator transfer switch fault. Immediate electrical technician required!'
     );
 
-    // Trigger AI Replanner
     await handleRunAIPlanning({
       type: 'EMERGENCY_REQUEST',
       emergencyRequestId: EMERGENCY_SIMULATION_REQUEST.id,
@@ -486,87 +511,78 @@ export default function DispatchDashboard() {
     setIsManualModalOpen(true);
   };
 
-  // Validation Check on Current Assignments
   const validation = validateSchedule(assignments, technicians, requests);
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white">
-      {/* Header */}
-      {currentVersion && (
-        <Header
-          currentVersion={currentVersion}
-          allVersions={versions}
-          assignedCount={assignments.length}
-          totalRequestsCount={requests.length}
-          activeTechCount={technicians.filter((t) => t.status === 'Active').length}
-          hasErrors={!validation.valid}
-          onTriggerAIPlanning={() => handleRunAIPlanning()}
-          onSimulateDisruption={handleSimulateTechDisruption}
-          onSimulateEmergency={handleSimulateEmergency}
-          onReset={handleResetDay}
-          onOpenVersionHistory={() => setIsVersionModalOpen(true)}
-          onOpenAuditLogs={() => setIsAuditModalOpen(true)}
-          onOpenNotifications={() => setIsNotifModalOpen(true)}
-          notificationCount={notifications.length}
-          auditCount={auditLogs.length}
-          isPlanning={isPlanning}
-        />
-      )}
+    <div className="flex min-h-screen bg-[#F1F1F1] text-[#2E2E2E] antialiased">
+      {/* ── STYLIST AI PERSISTENT ORANGE SIDEBAR ── */}
+      <Sidebar
+        currentVersion={currentVersion}
+        versionCount={versions.length}
+        auditCount={auditLogs.length}
+        notificationCount={notifications.length}
+        isPlanning={isPlanning}
+        onTriggerAIPlanning={() => handleRunAIPlanning()}
+        onSimulateEmergency={handleSimulateEmergency}
+        onSimulateDisruption={handleSimulateTechDisruption}
+        onOpenVersions={() => setIsVersionModalOpen(true)}
+        onOpenAuditLogs={() => setIsAuditModalOpen(true)}
+        onOpenNotifications={() => setIsNotifModalOpen(true)}
+        onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
+        onReset={handleResetDay}
+      />
 
-      {/* Human-in-the-Loop Approval Banner */}
-      {currentVersion && (
-        <ApprovalBanner
-          version={currentVersion}
-          onApprove={handleApprovePlan}
-          onReject={handleRejectPlan}
-          onViewRationale={() => setIsAssistantOpen(true)}
-          hasErrors={!validation.valid}
-        />
-      )}
+      {/* ── MAIN CONTENT AREA ── */}
+      <div className="flex-1 flex flex-col min-w-0 p-5 sm:p-7 gap-5 overflow-x-hidden">
+        {/* Top Header & 4 KPI Bento-Cards */}
+        {currentVersion && (
+          <Header
+            currentVersion={currentVersion}
+            assignedCount={assignments.length}
+            totalRequestsCount={requests.length}
+            activeTechCount={technicians.filter((t) => t.status === 'Active').length}
+            totalTechCount={technicians.length}
+            hasErrors={!validation.valid}
+            unassignedCount={unassignedIds.length}
+          />
+        )}
 
-      {/* Validation Alert Banner if hard constraint violated */}
-      {!validation.valid && (
-        <div className="bg-rose-950/90 border-b border-rose-800 p-2.5 px-6 text-xs text-rose-200 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="font-bold">⚠️ Hard Constraint Violations Detected:</span>
-            <span>{validation.errors[0]?.message}</span>
-            {validation.errors.length > 1 && (
-              <span className="opacity-75">
-                (+{validation.errors.length - 1} more errors)
-              </span>
-            )}
-          </div>
-          <span className="text-[11px] underline cursor-pointer" onClick={() => setIsAssistantOpen(true)}>
-            View details
-          </span>
-        </div>
-      )}
+        {/* Human-in-the-Loop Review Banner */}
+        {currentVersion && (
+          <ApprovalBanner
+            version={currentVersion}
+            onApprove={handleApprovePlan}
+            onReject={handleRejectPlan}
+            onViewRationale={() => setIsAssistantOpen(true)}
+            hasErrors={!validation.valid}
+          />
+        )}
 
-      {/* Main Workspace Layout */}
-      <main className="flex-1 p-4 sm:p-6 flex flex-col xl:flex-row gap-6 overflow-hidden">
-        {/* Left Column: Interactive Timeline Board */}
-        <section className="flex-1 flex flex-col min-h-[550px] overflow-hidden">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">
-              Field Service Dispatch Board (Oct 9, 2026)
-            </h2>
-            <div className="flex items-center gap-2 text-xs text-slate-400">
-              <span className="flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-rose-500" /> Emergency
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-amber-500" /> High
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-indigo-500" /> Medium
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-slate-500" /> Low
-              </span>
+        {/* Validation Alert if hard constraint violated */}
+        {!validation.valid && (
+          <div className="neo-card bg-[#ffdad6] p-3 text-xs font-black text-red-900 flex items-center justify-between border-red-700">
+            <div className="flex items-center gap-2">
+              <span className="uppercase tracking-wider">⚠️ Hard Constraint Violation:</span>
+              <span>{validation.errors[0]?.message}</span>
+              {validation.errors.length > 1 && (
+                <span className="opacity-80">
+                  (+{validation.errors.length - 1} more errors)
+                </span>
+              )}
             </div>
+            <button
+              onClick={() => setIsAssistantOpen(true)}
+              className="text-xs uppercase underline font-black"
+            >
+              View Rationale
+            </button>
           </div>
+        )}
 
-          <div className="flex-1">
+        {/* Bento Grid: Left Gantt Timeline (7fr) & Right Unassigned Queue (5fr) */}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 flex-1 items-start">
+          {/* Gantt Timeline Board */}
+          <div className="xl:col-span-8 flex flex-col h-full min-h-[580px]">
             <TimelineGrid
               technicians={technicians}
               requests={requests}
@@ -575,20 +591,20 @@ export default function DispatchDashboard() {
               selectedAssignmentId={selectedAssignment?.id}
             />
           </div>
-        </section>
 
-        {/* Right Column: Unassigned Queue Tray */}
-        <aside className="w-full xl:w-96 shrink-0 flex flex-col min-h-[400px]">
-          <ServiceRequestQueue
-            requests={requests}
-            unassignedIds={unassignedIds}
-            onSelectRequest={handleSelectQueueRequest}
-            onOpenManualAssign={handleOpenManualAssign}
-          />
-        </aside>
-      </main>
+          {/* Unassigned Queue */}
+          <div className="xl:col-span-4 flex flex-col h-full min-h-[580px]">
+            <ServiceRequestQueue
+              requests={requests}
+              unassignedIds={unassignedIds}
+              onSelectRequest={handleSelectQueueRequest}
+              onOpenManualAssign={handleOpenManualAssign}
+            />
+          </div>
+        </div>
+      </div>
 
-      {/* Drawers & Modals */}
+      {/* ── MODALS & DRAWERS ── */}
       {currentVersion && (
         <AIAssistantDrawer
           version={currentVersion}
@@ -598,6 +614,13 @@ export default function DispatchDashboard() {
           hasErrors={!validation.valid}
         />
       )}
+
+      <ApiKeyModal
+        isOpen={isApiKeyModalOpen}
+        onClose={() => setIsApiKeyModalOpen(false)}
+        onSaveKey={handleSaveApiKey}
+        currentKey={groqApiKey}
+      />
 
       <VersionHistoryModal
         isOpen={isVersionModalOpen}

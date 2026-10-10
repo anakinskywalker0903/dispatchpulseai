@@ -14,7 +14,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const plan = await generateDispatchPlan(body);
+    const clientApiKey = req.headers.get('x-groq-key') || undefined;
+    const plan = await generateDispatchPlan(body, clientApiKey);
     const validation = validateSchedule(plan.assignments, body.technicians, body.requests);
 
     return NextResponse.json({

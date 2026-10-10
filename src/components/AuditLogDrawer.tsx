@@ -8,10 +8,6 @@ import {
   Bot,
   User,
   Cpu,
-  CheckCircle,
-  AlertTriangle,
-  Flame,
-  Bell,
   Search,
 } from 'lucide-react';
 
@@ -41,70 +37,70 @@ export const AuditLogDrawer: React.FC<AuditLogDrawerProps> = ({
     switch (actor) {
       case 'AI_AGENT':
         return {
-          icon: <Bot className="h-3.5 w-3.5 text-indigo-400" />,
+          icon: <Bot className="h-3.5 w-3.5 text-[#FF6F20]" />,
           label: 'AI Agent (Groq)',
-          color: 'bg-indigo-950/80 text-indigo-300 border-indigo-800',
+          color: 'bg-[#c8e6ff] text-[#2E2E2E]',
         };
       case 'DISPATCHER':
         return {
-          icon: <User className="h-3.5 w-3.5 text-emerald-400" />,
+          icon: <User className="h-3.5 w-3.5 text-emerald-700" />,
           label: 'Dispatcher (Human)',
-          color: 'bg-emerald-950/80 text-emerald-300 border-emerald-800',
+          color: 'bg-[#86efac] text-[#14532d]',
         };
       case 'SYSTEM':
       default:
         return {
-          icon: <Cpu className="h-3.5 w-3.5 text-slate-400" />,
+          icon: <Cpu className="h-3.5 w-3.5 text-stone-700" />,
           label: 'System Engine',
-          color: 'bg-slate-800 text-slate-300 border-slate-700',
+          color: 'bg-[#F1F1F1] text-stone-700',
         };
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="w-full max-w-xl bg-slate-950 border-l border-slate-800 h-full flex flex-col shadow-2xl">
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs animate-in fade-in duration-100">
+      <div className="w-full max-w-xl bg-white border-l-[3px] border-[#2E2E2E] shadow-[-6px_0_0_0_#2E2E2E] h-full flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-slate-800 bg-slate-900/90 flex items-center justify-between">
+        <div className="p-4 border-b-[2.5px] border-[#2E2E2E] bg-[#FF6F20] text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-              <FileText className="h-4 w-4" />
+            <div className="h-9 w-9 neo-box-sm bg-white text-[#2E2E2E] flex items-center justify-center">
+              <FileText className="h-5 w-5 text-[#FF6F20]" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">
-                Immutable System & Decision Audit Log
+              <h3 className="text-sm font-black uppercase tracking-tight text-white">
+                Immutable Decision Audit Trail
               </h3>
-              <p className="text-xs text-slate-400">
-                {entries.length} recorded events • Compliance & override trail
+              <p className="text-[11px] font-bold text-white/90">
+                {entries.length} recorded events • Dispatcher overrides & AI plans
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+            className="p-1 neo-box-sm bg-white hover:bg-stone-100 text-[#2E2E2E]"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Filter Input */}
-        <div className="p-3 border-b border-slate-800 bg-slate-950">
+        <div className="p-3 border-b-[2px] border-[#2E2E2E] bg-[#F1F1F1]">
           <div className="relative">
-            <Search className="h-3.5 w-3.5 text-slate-500 absolute left-3 top-2.5" />
+            <Search className="h-3.5 w-3.5 text-stone-500 absolute left-3 top-2.5" />
             <input
               type="text"
-              placeholder="Search audit events by keyword..."
+              placeholder="Search audit trail by keyword..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-lg border border-slate-800 bg-slate-900 pl-9 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+              className="w-full neo-card-sm pl-9 pr-3 py-1.5 text-xs font-bold bg-white focus:outline-none"
             />
           </div>
         </div>
 
         {/* Timeline List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        <div className="flex-1 overflow-y-auto p-4 space-y-2.5 bg-[#FAF8F5]">
           {filtered.length === 0 ? (
-            <div className="text-center p-8 text-xs text-slate-500">
+            <div className="text-center p-8 text-xs font-bold text-stone-500">
               No audit logs match your search.
             </div>
           ) : (
@@ -114,22 +110,22 @@ export const AuditLogDrawer: React.FC<AuditLogDrawerProps> = ({
               return (
                 <div
                   key={entry.id}
-                  className="p-3 rounded-lg border border-slate-800/80 bg-slate-900/50 space-y-1.5 text-xs transition-colors hover:border-slate-700"
+                  className="neo-card-sm p-3 bg-white space-y-1.5 text-xs"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[11px] font-semibold ${badge.color}`}
+                        className={`neo-badge text-[10px] py-0 px-1.5 font-bold ${badge.color}`}
                       >
                         {badge.icon}
                         <span>{badge.label}</span>
                       </span>
-                      <span className="text-[10px] rounded bg-slate-800 px-1.5 py-0.5 text-slate-400 font-mono">
+                      <span className="neo-badge bg-[#F1F1F1] text-[9px] py-0 px-1 text-stone-600 font-mono">
                         {entry.eventType}
                       </span>
                     </div>
 
-                    <span className="text-[10px] text-slate-500 font-mono">
+                    <span className="text-[10px] text-stone-500 font-mono font-bold">
                       {new Date(entry.timestamp).toLocaleTimeString([], {
                         hour: '2-digit',
                         minute: '2-digit',
@@ -138,12 +134,12 @@ export const AuditLogDrawer: React.FC<AuditLogDrawerProps> = ({
                     </span>
                   </div>
 
-                  <p className="text-slate-200 font-medium leading-relaxed">
+                  <p className="text-[#2E2E2E] font-black leading-snug">
                     {entry.summary}
                   </p>
 
                   {entry.details && (
-                    <div className="bg-slate-950/80 rounded p-2 border border-slate-900 text-[11px] text-slate-400 font-mono overflow-x-auto">
+                    <div className="bg-[#F1F1F1] rounded-xs p-2 border border-[#2E2E2E] text-[10px] text-stone-700 font-mono overflow-x-auto">
                       {typeof entry.details === 'string'
                         ? entry.details
                         : JSON.stringify(entry.details, null, 2)}
@@ -156,10 +152,10 @@ export const AuditLogDrawer: React.FC<AuditLogDrawerProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-slate-800 bg-slate-900/90 flex justify-end">
+        <div className="p-3 border-t-[2.5px] border-[#2E2E2E] bg-white flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-xs font-semibold text-slate-300 hover:text-white"
+            className="neo-btn neo-btn-white text-xs py-1.5 px-4 font-black"
           >
             Close
           </button>

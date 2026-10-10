@@ -112,74 +112,74 @@ export const ManualAssignmentModal: React.FC<ManualAssignmentModalProps> = ({
   const isLocked = assignment?.locked || assignment?.status === 'Completed';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-      <div className="w-full max-w-lg rounded-xl border border-slate-800 bg-slate-950 p-6 shadow-2xl space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-100">
+      <div className="w-full max-w-lg neo-card p-6 bg-white space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="flex items-center justify-between border-b-[2.5px] border-[#2E2E2E] pb-3">
           <div>
-            <h3 className="text-base font-bold text-white">
-              {assignment ? 'Modify Assignment' : 'Assign Service Request'}
+            <h3 className="text-base font-black uppercase tracking-tight text-[#2E2E2E]">
+              {assignment ? 'Modify Work Order Slot' : 'Assign Service Request'}
             </h3>
-            <p className="text-xs text-slate-400">
-              Deterministic validation will prevent invalid schedules.
+            <p className="text-xs font-bold text-stone-500">
+              Deterministic validation prevents illegal assignments.
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+            className="p-1 neo-box-sm bg-white hover:bg-[#F1F1F1] text-[#2E2E2E]"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Request Summary Card */}
-        <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3 space-y-1.5 text-xs">
+        <div className="neo-card-sm p-3.5 bg-[#FAF8F5] space-y-2 text-xs">
           <div className="flex items-center justify-between">
-            <span className="font-bold text-indigo-400 font-mono">
+            <span className="neo-badge bg-[#c8e6ff] text-[10px]">
               {currentReq.id} • {currentReq.customer}
             </span>
-            <span className="rounded bg-slate-800 px-2 py-0.5 font-semibold text-slate-300">
+            <span className="neo-badge bg-[#fef08a] text-[10px]">
               {currentReq.priority}
             </span>
           </div>
-          <p className="font-medium text-slate-200">{currentReq.title}</p>
-          <div className="flex flex-wrap gap-2 text-slate-400 pt-1">
+          <p className="font-black text-sm text-[#2E2E2E]">{currentReq.title}</p>
+          <div className="flex flex-wrap gap-2 text-stone-600 pt-1 font-bold text-[11px]">
             <span className="flex items-center gap-1">
-              <Wrench className="h-3 w-3 text-indigo-400" />
-              Req Skill: <strong className="text-white">{currentReq.requiredSkill}</strong>
+              <Wrench className="h-3.5 w-3.5 text-[#FF6F20]" />
+              Skill: <strong className="text-[#2E2E2E]">{currentReq.requiredSkill}</strong>
             </span>
             <span>•</span>
             <span className="flex items-center gap-1">
-              <MapPin className="h-3 w-3 text-slate-500" /> {currentReq.region}
+              <MapPin className="h-3.5 w-3.5 text-stone-500" /> {currentReq.region}
             </span>
             <span>•</span>
             <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3 text-slate-500" /> {formatDuration(duration)}
+              <Clock className="h-3.5 w-3.5 text-stone-500" /> {formatDuration(duration)}
             </span>
           </div>
         </div>
 
         {isLocked ? (
-          <div className="p-4 rounded-lg bg-emerald-950/30 border border-emerald-900/50 text-xs text-emerald-300 flex items-start gap-2">
-            <Lock className="h-4 w-4 shrink-0 text-emerald-400 mt-0.5" />
+          <div className="neo-card-sm bg-[#86efac]/50 p-4 text-xs text-[#14532d] flex items-start gap-2 font-bold">
+            <Lock className="h-4 w-4 shrink-0 text-emerald-800 mt-0.5" />
             <div>
-              <p className="font-semibold">Assignment is Completed & Locked</p>
-              <p className="text-slate-400 mt-1">
-                Completed assignments are immutable and cannot be rescheduled or modified per system requirements.
+              <p className="font-black uppercase">Assignment is Completed & Locked</p>
+              <p className="text-stone-700 mt-1 font-medium">
+                Completed work orders are immutable and cannot be moved or altered per system rules.
               </p>
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
-            {/* Technician Selection */}
+          <div className="space-y-3.5">
+            {/* Technician Select */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label className="block text-xs font-black uppercase text-[#2E2E2E] mb-1">
                 Assign Technician:
               </label>
               <select
                 value={techId}
                 onChange={(e) => setTechId(e.target.value)}
-                className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                className="w-full neo-card-sm px-3 py-2 text-xs font-bold text-[#2E2E2E] bg-white focus:outline-none"
               >
                 {technicians.map((t) => {
                   const hasSkill = t.skills.includes(currentReq.requiredSkill);
@@ -192,10 +192,10 @@ export const ManualAssignmentModal: React.FC<ManualAssignmentModalProps> = ({
               </select>
             </div>
 
-            {/* Time Slot Selection */}
+            {/* Time Slot Select */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-black uppercase text-[#2E2E2E] mb-1">
                   Start Time:
                 </label>
                 <input
@@ -203,29 +203,29 @@ export const ManualAssignmentModal: React.FC<ManualAssignmentModalProps> = ({
                   step="1800"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono"
+                  className="w-full neo-card-sm px-3 py-2 text-xs font-mono font-bold text-[#2E2E2E] bg-white focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-black uppercase text-[#2E2E2E] mb-1">
                   End Time (Calculated):
                 </label>
-                <div className="w-full rounded-lg border border-slate-800 bg-slate-900/40 px-3 py-2 text-xs text-slate-400 font-mono">
-                  {calculatedEndTime} ({duration} mins)
+                <div className="w-full neo-card-sm px-3 py-2 text-xs font-mono font-bold text-stone-700 bg-[#F1F1F1]">
+                  {calculatedEndTime} ({duration}m)
                 </div>
               </div>
             </div>
 
-            {/* Status Selection */}
+            {/* Status Select */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label className="block text-xs font-black uppercase text-[#2E2E2E] mb-1">
                 Assignment Status:
               </label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as any)}
-                className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                className="w-full neo-card-sm px-3 py-2 text-xs font-bold text-[#2E2E2E] bg-white focus:outline-none"
               >
                 <option value="Approved">Approved (Active Shift)</option>
                 <option value="Completed">Completed (Locks assignment permanently)</option>
@@ -234,32 +234,32 @@ export const ManualAssignmentModal: React.FC<ManualAssignmentModalProps> = ({
               </select>
             </div>
 
-            {/* Override Reason */}
+            {/* Override Reason Input */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label className="block text-xs font-black uppercase text-[#2E2E2E] mb-1">
                 Dispatcher Justification / Notes:
               </label>
               <input
                 type="text"
                 value={overrideReason}
                 onChange={(e) => setOverrideReason(e.target.value)}
-                placeholder="e.g., Requested by customer directly; expedited VIP client."
-                className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                placeholder="e.g. VIP client expedited; requested by customer."
+                className="w-full neo-card-sm px-3 py-2 text-xs font-bold text-[#2E2E2E] bg-white focus:outline-none"
               />
             </div>
 
-            {/* Validation Feedback Banner */}
+            {/* Validation Feedback */}
             {validationError ? (
-              <div className="p-3 rounded-lg bg-rose-950/40 border border-rose-900/60 text-xs text-rose-300 flex items-start gap-2">
-                <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+              <div className="neo-card-sm bg-[#ffdad6] p-3 text-xs text-red-900 flex items-start gap-2 font-bold">
+                <AlertTriangle className="h-4 w-4 text-red-700 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-bold">Constraint Conflict: </span>
+                  <span className="font-black uppercase">Constraint Conflict: </span>
                   {validationError}
                 </div>
               </div>
             ) : (
-              <div className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-900/50 text-xs text-emerald-300 flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              <div className="neo-card-sm bg-[#86efac]/40 p-2.5 text-xs text-[#14532d] flex items-center gap-2 font-bold">
+                <CheckCircle2 className="h-4 w-4 text-emerald-700" />
                 <span>Deterministic checks passed. No double booking or skill mismatch.</span>
               </div>
             )}
@@ -267,14 +267,14 @@ export const ManualAssignmentModal: React.FC<ManualAssignmentModalProps> = ({
         )}
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between border-t border-slate-800 pt-3">
+        <div className="flex items-center justify-between border-t-[2.5px] border-[#2E2E2E] pt-3">
           {assignment && onUnassign && !isLocked ? (
             <button
               onClick={() => {
                 onUnassign(assignment.id);
                 onClose();
               }}
-              className="text-xs font-medium text-rose-400 hover:text-rose-300"
+              className="text-xs font-black text-red-700 hover:underline uppercase"
             >
               Unassign Ticket
             </button>
@@ -285,7 +285,7 @@ export const ManualAssignmentModal: React.FC<ManualAssignmentModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
-              className="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900 text-xs font-medium text-slate-400 hover:text-white"
+              className="neo-btn neo-btn-white text-xs py-1.5 px-3"
             >
               Cancel
             </button>
@@ -294,7 +294,7 @@ export const ManualAssignmentModal: React.FC<ManualAssignmentModalProps> = ({
               <button
                 onClick={handleSave}
                 disabled={Boolean(validationError)}
-                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-indigo-600 text-xs font-semibold text-white shadow-md shadow-indigo-600/30 hover:bg-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="neo-btn neo-btn-orange text-xs py-1.5 px-4 flex items-center gap-1.5 font-black"
               >
                 <UserCheck className="h-4 w-4" />
                 <span>Save Assignment</span>

@@ -10,9 +10,10 @@ import { solveScheduleDeterministically } from './heuristicSolver';
 import { validateSchedule } from './constraintEngine';
 
 export async function generateDispatchPlan(
-  payload: AIPlanningRequest
+  payload: AIPlanningRequest,
+  overrideApiKey?: string
 ): Promise<AIPlanningResponse> {
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = overrideApiKey || process.env.GROQ_API_KEY;
 
   // If no Groq API key is configured, instantly run deterministic solver
   if (!apiKey || apiKey.trim() === '') {
